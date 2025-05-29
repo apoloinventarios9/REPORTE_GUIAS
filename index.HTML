@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Transferencias</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
+    <style>
+        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;}
+        .completed { background-color: #d4edda; color: #155724;}
+        .partial { background-color: #fff3cd; color: #856404;}
+        .pending { background-color: #f8d7da; color: #721c24;}
+        .table-primary th, #estadoTable th, #resumenTable th {
+            background-color: #0d6efd !important;
+            color: #fff !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+            white-space: nowrap;
+        }
+        #estadoTable td, #resumenTable td {
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        #customLoading { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:10000; align-items:center; justify-content:center; flex-direction:column;}
+        .spinner-border { width: 3rem; height: 3rem;}
+        #fileBtn { margin: 20px auto 0 auto; display: block;}
+        #errorMsg { color: red; text-align: center; margin-top: 10px;}
+        #estadoTable, #resumenTable {
+            font-size: 0.85rem;
+        }
+        #estadoTable th, #estadoTable td,
+        #resumenTable th, #resumenTable td {
+            font-size: 0.85rem;
+        }
+        .dataTables_wrapper .dt-buttons .btn {
+            margin-right: 5px;
+            background: #0d6efd;
+            color: #fff;
+            border-radius: 5px;
+        }
+        .dataTable tbody tr:nth-child(even) { background: #f2f2f2; }
+        .dataTable tbody tr:hover { background: #e3f2fd; }
+        .dataTables_wrapper .dt-buttons {
+            margin-bottom: 0.5em;
+        }
+        .warehouse-legend-table {
+            margin: 0 auto;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            border-collapse: collapse;
+        }
+        .warehouse-legend-table th, .warehouse-legend-table td {
+            border: 1px solid #ccc;
+            padding: 2px 8px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+        /* Responsive leyenda */
+        details[open] > summary:before { content: "▼ "; }
+        details > summary:before { content: "► "; }
+        details { margin-top: 10px; }
+        /* Barra de progreso personalizada */
+        .progress { height: 20px; width:300px; margin: 0 auto; }
+        .progress-bar { font-weight: bold; }
+        /* Estilos personalizados */
+        #loading {
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 2px dashed #0d6efd;
+            border-radius: 12px;
+            background: #f8f9fa;
+            margin: 40px auto 0 auto;
+            max-width: 420px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        #loading.dragover {
+            border-color: #198754;
+            background: #e9fbe5;
+        }
+        #loading .spinner-border {
+            width: 2.5rem;
+            height: 2.5rem;
+        }
+        #loading .upload-icon {
+            font-size: 2.5rem;
+            color: #0d6efd;
+            margin-bottom: 10px;
+            display: block;
+        }
+        #loading .upload-text {
+            font-size: 1.15rem;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        #loading .upload-hint {
+            font-size: 0.95rem;
+            color: #666;
+        }
+        #fileBtn {
+            display: none;
+        }
+        .autor-footer {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            background: rgba(248,249,250,0.96);
+            color: #444;
+            font-size: 0.97rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 7px 20px;
+            z-index: 2000;
+            pointer-events: none;
+            user-select: none;
+            letter-spacing: 0.02em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Spinner de carga, oculto por defecto -->
+    <div id="customLoading" style="display:none;">
+        <div class="text-center w-100">
+            <div class="spinner-border text-primary" role="status"></div>
+            <div class="progress mt-3">
+                <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%">0%</div>
+            </div>
+            <div id="customLoadingMsg" class="mt-2 fw-bold">Cargando archivo...</div>
+        </div>
+    </div>
+
+    <!-- Área de carga visible por defecto -->
+    <div id="loading" tabindex="0" title="Haz clic o arrastra tu archivo Excel aquí">
+        <div class="w-100 text-center py-3">
+            <span class="upload-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-cloud-arrow-up" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8 0a5.53 5.53 0 0 0-5.473 6.01A4.002 4.002 0 0 0 4 16h8a4 4 0 0 0 2.473-7.99A5.53 5.53 0 0 0 8 0Zm0 1a4.53 4.53 0 0 1 4.473 5.01.5.5 0 0 0 .527.59A3 3 0 0 1 12 15H4a3 3 0 0 1-.999-5.4.5.5 0 0 0 .527-.59A4.53 4.53 0 0 1 8 1Zm.5 7.5V13a.5.5 0 0 1-1 0V8.5H5.354a.5.5 0 0 1-.353-.854l2.146-2.147a.5.5 0 0 1 .707 0l2.146 2.147a.5.5 0 0 1-.353.854H8.5Z"/>
+                </svg>
+            </span>
+            <div class="upload-text fw-bold">Haz clic o arrastra tu archivo Excel aquí</div>
+            <div class="upload-hint">Formatos permitidos: <b>.xlsx, .xls</b></div>
+            <div id="errorMsg"></div>
+        </div>
+    </div>
+    <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none;">
+
+    <div class="container-fluid mt-3" style="display:none;" id="mainContent">
+        <!-- PESTAÑAS -->
+        <ul class="nav nav-tabs mb-3" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboardTab" type="button" role="tab" aria-controls="dashboardTab" aria-selected="true">
+                    Dashboard
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tablaGeneral-tab" data-bs-toggle="tab" data-bs-target="#tablaGeneralTab" type="button" role="tab" aria-controls="tablaGeneralTab" aria-selected="false">
+                    Tabla General
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumenTab" type="button" role="tab" aria-controls="resumenTab" aria-selected="false">
+                    Resumen de Guías por Documento
+                </button>
+            </li>
+        </ul>
+        <div class="tab-content" id="mainTabsContent">
+            <!-- DASHBOARD -->
+            <div class="tab-pane fade show active" id="dashboardTab" role="tabpanel" aria-labelledby="dashboard-tab">
+                <h1 class="text-center">Dashboard de Transferencias</h1>
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">Resumen de Estados</div>
+                            <div class="card-body">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">Pendientes por Almacén</div>
+                            <div class="card-body">
+                                <canvas id="warehouseChart"></canvas>
+                                <details open>
+                                    <summary>Ver leyenda de almacenes</summary>
+                                    <div id="warehouseLegend"></div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">Pendientes por Fecha</div>
+                            <div class="card-body">
+                                <canvas id="dateChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- TABLA GENERAL -->
+            <div class="tab-pane fade" id="tablaGeneralTab" role="tabpanel" aria-labelledby="tablaGeneral-tab">
+                <div class="row mb-3">
+                    <div class="col-12 text-center">
+                        <label class="me-3 fw-bold">Filtrar por Estado Documento:</label>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input estado-filter" type="checkbox" id="filtroPendiente" value="Pendiente-Total" checked>
+                            <label class="form-check-label" for="filtroPendiente">Pendiente-Total</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input estado-filter" type="checkbox" id="filtroParcial" value="Aceptado-Parcial" checked>
+                            <label class="form-check-label" for="filtroParcial">Aceptado-Parcial</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input estado-filter" type="checkbox" id="filtroTotal" value="Aceptado-Total" checked>
+                            <label class="form-check-label" for="filtroTotal">Aceptado-Total</label>
+                        </div>
+                        <div class="form-check form-check-inline ms-4">
+                            <input class="form-check-input" type="checkbox" id="filtroDiferenteCero">
+                            <label class="form-check-label" for="filtroDiferenteCero">Solo Diferencia ≠ 0</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div style="overflow-x:auto;">
+                            <table id="estadoTable" class="display nowrap table table-bordered" style="width:100%">
+                                <thead class="table-primary">
+                                    <tr>
+                                        <th>Origen Sucursal</th>
+                                        <th>Origen Almacen</th>
+                                        <th>Origen Documento</th>
+                                        <th>Origen Fecha</th>
+                                        <th>Producto Codigo</th>
+                                        <th>Producto Descripcion</th>
+                                        <th>Producto Cantidad</th>
+                                        <th>Destino Sucursal</th>
+                                        <th>Destino Almacen</th>
+                                        <th>Destino Fecha</th>
+                                        <th>Destino Cantidad</th>
+                                        <th>Diferencia de Cantidades</th>
+                                        <th>Estado Documento</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- RESUMEN DE GUÍAS -->
+            <div class="tab-pane fade" id="resumenTab" role="tabpanel" aria-labelledby="resumen-tab">
+                <div class="row mt-2 mb-3">
+                    <div class="col-md-2">
+                        <label for="filtroDestinoResumen" class="form-label">Almacén Destino</label>
+                        <select id="filtroDestinoResumen" class="form-select resumen-filter">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filtroOrigenResumen" class="form-label">Almacén Origen</label>
+                        <select id="filtroOrigenResumen" class="form-select resumen-filter">
+                            <option value="">Todos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="filtroEstadoResumen" class="form-label">Estado Documento</label>
+                        <select id="filtroEstadoResumen" class="form-select resumen-filter" multiple>
+                            <option value="Pendiente-Total" selected>Pendiente-Total</option>
+                            <option value="Aceptado-Parcial" selected>Aceptado-Parcial</option>
+                            <option value="Aceptado-Total" selected>Aceptado-Total</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filtroFechaIniResumen" class="form-label">Fecha Desde</label>
+                        <input type="date" id="filtroFechaIniResumen" class="form-control resumen-filter">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="filtroFechaFinResumen" class="form-label">Fecha Hasta</label>
+                        <input type="date" id="filtroFechaFinResumen" class="form-control resumen-filter">
+                    </div>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table id="resumenTable" class="display nowrap table table-bordered" style="width:100%">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Almacén Destino</th>
+                                <th>Almacén Origen</th>
+                                <th>Guía Remisión</th>
+                                <th>Fecha Guía</th>
+                                <th>Estado Documento</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal para detalle de guía -->
+    <div class="modal fade" id="detalleGuiaModal" tabindex="-1" aria-labelledby="detalleGuiaLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="detalleGuiaLabel">Detalle de Guía</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2">
+              <label class="me-2 fw-bold">Mostrar:</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="detalleFiltro" id="detalleTodo" value="todo" checked>
+                <label class="form-check-label" for="detalleTodo">Toda la guía</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="detalleFiltro" id="detallePendiente" value="pendiente">
+                <label class="form-check-label" for="detallePendiente">Solo pendientes</label>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="table table-bordered table-sm" id="detalleGuiaTable">
+                <thead class="table-primary">
+                  <tr>
+                    <th>Producto Código</th>
+                    <th>Producto Descripción</th>
+                    <th>Cantidad Origen</th>
+                    <th>Cantidad Destino</th>
+                    <th>Diferencia</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+let rawData = [];
+let processedData = [];
+let estadoTable, resumenTable;
+let statusChart, warehouseChart, dateChart;
+
+function showError(msg) {
+    $('#errorMsg').text(msg);
+}
+
+// Barra de carga mejorada
+function showLoadingBar(msg = "Cargando archivo...") {
+    $('#customLoading').show();
+    $('#progressBar').css('width', '0%').text('0%');
+    $('#customLoadingMsg').text(msg);
+}
+function updateLoadingBar(percent, msg) {
+    $('#progressBar').css('width', percent + '%').text(percent + '%');
+    if (msg) $('#customLoadingMsg').text(msg);
+}
+function hideLoadingBar() {
+    $('#customLoading').hide();
+}
+
+function handleFile(e) {
+    const file = e.target.files ? e.target.files[0] : e;
+    if (!file) return;
+    if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        showError('Archivo no válido. Selecciona un archivo Excel (.xlsx o .xls)');
+        return;
+    }
+    showError('');
+    showLoadingBar('Cargando archivo...');
+    const reader = new FileReader();
+    reader.onprogress = function(evt) {
+        if (evt.lengthComputable) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            updateLoadingBar(percent, 'Cargando archivo...');
+        }
+    };
+    reader.onload = function(e) {
+        updateLoadingBar(100, 'Procesando datos...');
+        setTimeout(() => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                rawData = XLSX.utils.sheet_to_json(firstSheet);
+                if (!rawData.length) throw new Error('El archivo está vacío o no tiene datos.');
+                processData();
+                initializeTables();
+                renderResumenTable();
+                updateLoadingBar(100, '¡Carga exitosa!');
+                setTimeout(() => {
+                    hideLoadingBar();
+                    $('#loading').hide();
+                    $('#mainContent').show();
+                }, 800);
+            } catch (err) {
+                hideLoadingBar();
+                showError('Error al procesar el archivo: ' + err.message);
+            }
+        }, 500);
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function parseDate(date) {
+    if (!date) return '';
+    if (typeof date === 'number') {
+        // Excel date number
+        return XLSX.SSF.format('yyyy-mm-dd', date);
+    }
+    if (typeof date === 'string') {
+        // Try to parse dd/mm/yyyy or yyyy-mm-dd
+        let parts;
+        if (date.includes('/')) {
+            parts = date.split('/');
+            if (parts.length === 3) {
+                // dd/mm/yyyy
+                return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+            }
+        }
+        if (date.includes('-')) {
+            parts = date.split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                // yyyy-mm-dd
+                return date;
+            }
+        }
+        // Fallback
+        const d = new Date(date);
+        if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+    }
+    return '';
+}
+
+function processData() {
+    const groupedByDocument = {};
+    rawData.forEach(row => {
+        row['Producto Cantidad'] = Number(row['Producto Cantidad']) || 0;
+        row['Destino Cantidad'] = Number(row['Destino Cantidad']) || 0;
+        row['Diferencia de Cantidades'] = Number(row['Diferencia de Cantidades']) || (row['Producto Cantidad'] - row['Destino Cantidad']);
+        row['Origen Fecha'] = parseDate(row['Origen Fecha']);
+        const doc = row['Origen Documento'];
+        if (!groupedByDocument[doc]) groupedByDocument[doc] = [];
+        groupedByDocument[doc].push(row);
+    });
+    processedData = [];
+    Object.keys(groupedByDocument).forEach(doc => {
+        const group = groupedByDocument[doc];
+        let status = 'Aceptado-Total';
+        let totalQuantity = 0;
+        let totalDestQuantity = 0;
+        let anyPartial = false;
+        group.forEach(row => {
+            totalQuantity += row['Producto Cantidad'];
+            totalDestQuantity += row['Destino Cantidad'];
+            if (row['Diferencia de Cantidades'] > 0) anyPartial = true;
+        });
+        if (totalDestQuantity === 0) status = 'Pendiente-Total';
+        else if (anyPartial) status = 'Aceptado-Parcial';
+        group.forEach(row => {
+            row['Estado Documento'] = status;
+            processedData.push(row);
+        });
+    });
+}
+
+function initializeTables() {
+    if (!$.fn.DataTable.isDataTable('#estadoTable')) {
+        estadoTable = $('#estadoTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            scrollX: true,
+            scrollY: '400px',
+            scrollCollapse: true,
+            paging: true,
+            pageLength: 25,
+            deferRender: true,
+            data: [],
+            columns: [
+                { data: 'Origen Sucursal' },
+                { data: 'Origen Almacen' },
+                { data: 'Origen Documento' },
+                { data: 'Origen Fecha' },
+                { data: 'Producto Codigo' },
+                { data: 'Producto Descripcion' },
+                { data: 'Producto Cantidad' },
+                { data: 'Destino Sucursal' },
+                { data: 'Destino Almacen' },
+                { data: 'Destino Fecha' },
+                { data: 'Destino Cantidad' },
+                { data: 'Diferencia de Cantidades' },
+                { data: 'Estado Documento', render: function(data) {
+                    let className = '';
+                    if (data === 'Aceptado-Parcial') className = 'partial';
+                    else if (data === 'Pendiente-Total') className = 'pending';
+                    else className = 'completed';
+                    return `<span class="status-badge ${className}" title="${data}">${data}</span>`;
+                }}
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es_es.json',
+                emptyTable: "No hay datos para mostrar",
+                loadingRecords: "Cargando...",
+                processing: "Procesando...",
+                search: "Buscar:",
+                lengthMenu: "Mostrar _MENU_ registros",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior"
+                }
+            }
+        });
+    }
+    renderEstadoTable();
+    $('.estado-filter, #filtroDiferenteCero').off('change').on('change', function() {
+        renderEstadoTable();
+    });
+}
+
+function renderEstadoTable() {
+    const estadosSeleccionados = $('.estado-filter:checked').map(function() {
+        return this.value;
+    }).get();
+    const soloDiferenteCero = $('#filtroDiferenteCero').is(':checked');
+    let filtered = processedData.filter(row => estadosSeleccionados.includes(row['Estado Documento']));
+    if (soloDiferenteCero) {
+        filtered = filtered.filter(row => Number(row['Diferencia de Cantidades']) !== 0);
+    }
+    estadoTable.clear().rows.add(filtered).draw();
+    updateCharts();
+}
+
+// ----------- RESUMEN DE GUÍAS -----------
+
+function buildResumenTable() {
+    // Agrupa por documento único
+    const resumenDocs = {};
+    processedData.forEach(row => {
+        const doc = row['Origen Documento'];
+        if (!resumenDocs[doc]) {
+            resumenDocs[doc] = {
+                'Almacén Destino': row['Destino Almacen'],
+                'Almacén Origen': row['Origen Almacen'],
+                'Guía Remisión': doc,
+                'Fecha Guía': row['Origen Fecha'],
+                'Estado Documento': row['Estado Documento']
+            };
+        }
+    });
+    return Object.values(resumenDocs);
+}
+
+function fillResumenFilters(resumenData) {
+    const origenes = [...new Set(resumenData.map(r => r['Almacén Origen']).filter(Boolean))].sort();
+    const destinos = [...new Set(resumenData.map(r => r['Almacén Destino']).filter(Boolean))].sort();
+    $('#filtroOrigenResumen').html('<option value="">Todos</option>' + origenes.map(o => `<option value="${o}">${o}</option>`).join(''));
+    $('#filtroDestinoResumen').html('<option value="">Todos</option>' + destinos.map(d => `<option value="${d}">${d}</option>`).join(''));
+}
+
+function renderResumenTable() {
+    const resumenData = buildResumenTable();
+    const filtroOrigen = $('#filtroOrigenResumen').val();
+    const filtroDestino = $('#filtroDestinoResumen').val();
+    const filtroEstados = $('#filtroEstadoResumen').val() || [];
+    const filtroFechaIni = $('#filtroFechaIniResumen').val();
+    const filtroFechaFin = $('#filtroFechaFinResumen').val();
+
+    let filtered = resumenData.filter(row => {
+        let ok = true;
+        if (filtroOrigen && row['Almacén Origen'] !== filtroOrigen) ok = false;
+        if (filtroDestino && row['Almacén Destino'] !== filtroDestino) ok = false;
+        if (filtroEstados.length && !filtroEstados.includes(row['Estado Documento'])) ok = false;
+        if (filtroFechaIni && row['Fecha Guía'] < filtroFechaIni) ok = false;
+        if (filtroFechaFin && row['Fecha Guía'] > filtroFechaFin) ok = false;
+        return ok;
+    });
+
+    if (!$.fn.DataTable.isDataTable('#resumenTable')) {
+        resumenTable = $('#resumenTable').DataTable({
+            dom: 'Bfrtip',
+            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            scrollX: true,
+            scrollY: '300px',
+            scrollCollapse: true,
+            paging: true,
+            pageLength: 20,
+            deferRender: true,
+            data: filtered,
+            columns: [
+                { data: 'Almacén Destino' },
+                { data: 'Almacén Origen' },
+                { data: 'Guía Remisión', render: function(data, type, row) {
+                    return `<a href="#" class="ver-detalle-guia" data-guia="${data}" title="Ver detalle de la guía">${data}</a>`;
+                }},
+                { data: 'Fecha Guía' },
+                { data: 'Estado Documento', render: function(data) {
+                    let className = '';
+                    if (data === 'Aceptado-Parcial') className = 'partial';
+                    else if (data === 'Pendiente-Total') className = 'pending';
+                    else className = 'completed';
+                    return `<span class="status-badge ${className}" title="${data}">${data}</span>`;
+                }}
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es_es.json',
+                emptyTable: "No hay datos para mostrar",
+                loadingRecords: "Cargando...",
+                processing: "Procesando...",
+                search: "Buscar:",
+                lengthMenu: "Mostrar _MENU_ registros",
+                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                infoEmpty: "Mostrando 0 a 0 de 0 registros",
+                paginate: {
+                    first: "Primero",
+                    last: "Último",
+                    next: "Siguiente",
+                    previous: "Anterior"
+                }
+            }
+        });
+    } else {
+        resumenTable.clear().rows.add(filtered).draw();
+    }
+    fillResumenFilters(resumenData);
+}
+
+$(document).on('change', '.resumen-filter', function() {
+    renderResumenTable();
+});
+
+// ----------- GRÁFICOS -----------
+
+function updateCharts() {
+    // Filtra los datos según los estados seleccionados
+    const estadosSeleccionados = $('.estado-filter:checked').map(function() {
+        return this.value;
+    }).get();
+    const filtered = processedData.filter(row => estadosSeleccionados.includes(row['Estado Documento']));
+
+    // 1. Resumen de estados (por cantidad de documentos únicos)
+    const statusCounts = { 'Aceptado-Total': 0, 'Aceptado-Parcial': 0, 'Pendiente-Total': 0 };
+    const uniqueDocs = {};
+    filtered.forEach(row => {
+        const doc = row['Origen Documento'];
+        if (!uniqueDocs[doc]) {
+            uniqueDocs[doc] = row['Estado Documento'];
+            statusCounts[row['Estado Documento']]++;
+        }
+    });
+
+    // 2. Pendientes por almacén (por cantidad de documentos únicos)
+    const warehouseDocs = {};
+    Object.keys(uniqueDocs).forEach(doc => {
+        const estado = uniqueDocs[doc];
+        if (estado !== 'Aceptado-Total') {
+            const row = filtered.find(r => r['Origen Documento'] === doc);
+            const warehouse = row ? (row['Destino Almacen'] || 'Sin Almacén') : 'Sin Almacén';
+            if (!warehouseDocs[warehouse]) warehouseDocs[warehouse] = 0;
+            warehouseDocs[warehouse]++;
+        }
+    });
+    const sortedWarehouses = Object.keys(warehouseDocs).sort((a, b) => warehouseDocs[b] - warehouseDocs[a]);
+    const warehouseNumbers = sortedWarehouses.map((w, i) => i + 1);
+    const warehouseChartData = {
+        labels: warehouseNumbers.map(n => n.toString()),
+        datasets: [{
+            label: 'Guías Pendientes',
+            data: sortedWarehouses.map(w => warehouseDocs[w]),
+            backgroundColor: 'rgba(255, 193, 7, 0.2)',
+            borderColor: 'rgba(255, 193, 7, 1)',
+            borderWidth: 2,
+            tension: 0.1
+        }]
+    };
+
+    // Renderiza la leyenda debajo del gráfico (ahora dentro de <details>)
+    let legendHtml = '<table class="warehouse-legend-table"><thead><tr><th>#</th><th>Almacén</th><th>Pendientes</th></tr></thead><tbody>';
+    sortedWarehouses.forEach((w, i) => {
+        legendHtml += `<tr><td>${i + 1}</td><td>${w}</td><td>${warehouseDocs[w]}</td></tr>`;
+    });
+    legendHtml += '</tbody></table>';
+    $('#warehouseLegend').html(legendHtml);
+
+    // 3. Pendientes por fecha (por cantidad de documentos únicos)
+    const dateDocs = {};
+    filtered.forEach(row => {
+        const date = row['Origen Fecha'];
+        if (!dateDocs[date]) dateDocs[date] = 0;
+        dateDocs[date]++;
+    });
+    const sortedDates = Object.keys(dateDocs).sort((a, b) => new Date(a) - new Date(b));
+    const dateChartData = {
+        labels: sortedDates,
+        datasets: [{
+            label: 'Guías Pendientes',
+            data: sortedDates.map(d => dateDocs[d]),
+            backgroundColor: 'rgba(220, 53, 69, 0.2)',
+            borderColor: 'rgba(220, 53, 69, 1)',
+            borderWidth: 2,
+            tension: 0.1,
+            fill: true
+        }]
+    };
+
+    // Actualiza los gráficos
+    if (statusChart) {
+        statusChart.data.datasets[0].data = Object.values(statusCounts);
+        statusChart.update();
+    } else {
+        statusChart = new Chart(document.getElementById('statusChart').getContext('2d'), {
+            type: 'pie',
+            data: {
+                labels: Object.keys(statusCounts),
+                datasets: [{
+                    label: 'Estado de Documentos',
+                    data: Object.values(statusCounts),
+                    backgroundColor: ['#198754', '#ffc107', '#dc3545'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                const label = tooltipItem.label || '';
+                                const value = tooltipItem.raw || 0;
+                                const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = total > 0 ? ((value / total) * 100).toFixed(2) + '%' : '0%';
+                                return `${label}: ${value} (${percentage})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    // Gráfico de almacenes
+    if (warehouseChart) {
+        warehouseChart.data.labels = warehouseNumbers.map(n => n.toString());
+        warehouseChart.data.datasets[0].data = sortedWarehouses.map(w => warehouseDocs[w]);
+        warehouseChart.update();
+    } else {
+        warehouseChart = new Chart(document.getElementById('warehouseChart').getContext('2d'), {
+            type: 'bar',
+            data: warehouseChartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label || '';
+                                const value = context.raw || 0;
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Guías Pendientes' } },
+                    x: { title: { display: true, text: 'N° de Almacén (ver leyenda abajo)' } }
+                }
+            }
+        });
+    }
+    // Gráfico de fechas
+    if (dateChart) {
+        dateChart.data.labels = sortedDates;
+        dateChart.data.datasets[0].data = sortedDates.map(d => dateDocs[d]);
+        dateChart.update();
+    } else {
+        dateChart = new Chart(document.getElementById('dateChart').getContext('2d'), {
+            type: 'line',
+            data: dateChartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Guías Pendientes: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Guías Pendientes' } },
+                    x: { title: { display: true, text: 'Fecha de Origen' } }
+                }
+            }
+        });
+    }
+}
+
+$(document).ready(function() {
+    // Haz que todo el área de carga sea clickeable
+    $('#loading').on('click keypress', function(e) {
+        if (e.type === 'click' || (e.type === 'keypress' && (e.key === 'Enter' || e.key === ' '))) {
+            $('#excelFile').val('');
+            $('#excelFile').click();
+        }
+    });
+    $('#excelFile').on('change', handleFile);
+
+    // Drag & drop visual feedback
+    $('#loading').on('dragover', function(e) { e.preventDefault(); e.stopPropagation(); $(this).addClass('dragover'); });
+    $('#loading').on('dragleave drop', function(e) { e.preventDefault(); e.stopPropagation(); $(this).removeClass('dragover'); });
+    $('#loading').on('drop', function(e) {
+        if (e.originalEvent.dataTransfer.files.length) handleFile(e.originalEvent.dataTransfer.files[0]);
+    });
+});
+
+$(document).on('click', '.ver-detalle-guia', function(e) {
+    e.preventDefault();
+    const guia = $(this).data('guia');
+    $('#detalleGuiaModal').data('guia', guia);
+    $('#detalleGuiaLabel').text('Detalle de Guía: ' + guia);
+    $('input[name="detalleFiltro"][value="todo"]').prop('checked', true);
+    cargarDetalleGuia(guia, 'todo');
+    $('#detalleGuiaModal').modal('show');
+});
+
+$(document).on('change', 'input[name="detalleFiltro"]', function() {
+    const guia = $('#detalleGuiaModal').data('guia');
+    const filtro = $('input[name="detalleFiltro"]:checked').val();
+    cargarDetalleGuia(guia, filtro);
+});
+
+function cargarDetalleGuia(guia, filtro) {
+    let filas = processedData.filter(row => row['Origen Documento'] === guia);
+    if (filtro === 'pendiente') {
+        filas = filas.filter(row => Number(row['Diferencia de Cantidades']) > 0);
+    }
+    let html = '';
+    if (filas.length === 0) {
+        html = '<tr><td colspan="5" class="text-center">Sin datos</td></tr>';
+    } else {
+        filas.forEach(row => {
+            html += `<tr>
+                <td>${row['Producto Codigo']}</td>
+                <td>${row['Producto Descripcion']}</td>
+                <td>${row['Producto Cantidad']}</td>
+                <td>${row['Destino Cantidad']}</td>
+                <td>${row['Diferencia de Cantidades']}</td>
+            </tr>`;
+        });
+    }
+    $('#detalleGuiaTable tbody').html(html);
+}
+    </script>
+    <footer class="autor-footer">
+        &copy; 2025 Miguel Fajardo. Todos los derechos reservados.
+    </footer>
+</body>
+</html>
