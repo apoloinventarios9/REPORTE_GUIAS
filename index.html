@@ -8,126 +8,380 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
     <style>
-        .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;}
-        .completed { background-color: #d4edda; color: #155724;}
-        .partial { background-color: #fff3cd; color: #856404;}
-        .pending { background-color: #f8d7da; color: #721c24;}
-        .table-primary th, #estadoTable th, #resumenTable th {
-            background-color: #0d6efd !important;
-            color: #fff !important;
-            text-align: center !important;
-            vertical-align: middle !important;
-            white-space: nowrap;
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f6f7fb;
         }
-        #estadoTable td, #resumenTable td {
-            text-align: center;
-            vertical-align: middle;
-            white-space: nowrap;
+        .container-fluid {
+            padding-left: 10px;
+            padding-right: 10px;
         }
-        #customLoading { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.95); z-index:10000; align-items:center; justify-content:center; flex-direction:column;}
-        .spinner-border { width: 3rem; height: 3rem;}
-        #fileBtn { margin: 20px auto 0 auto; display: block;}
-        #errorMsg { color: red; text-align: center; margin-top: 10px;}
-        #estadoTable, #resumenTable {
-            font-size: 0.85rem;
+        .nav-tabs .nav-link {
+            font-size: 0.97rem;
+            padding: 6px 18px;
+            border-radius: 8px 8px 0 0;
+            margin-right: 2px;
         }
-        #estadoTable th, #estadoTable td,
-        #resumenTable th, #resumenTable td {
-            font-size: 0.85rem;
-        }
-        .dataTables_wrapper .dt-buttons .btn {
-            margin-right: 5px;
-            background: #0d6efd;
+        .nav-tabs .nav-link.active {
+            background: #002060;
             color: #fff;
-            border-radius: 5px;
+            border-color: #002060 #002060 #fff;
         }
-        .dataTable tbody tr:nth-child(even) { background: #f2f2f2; }
-        .dataTable tbody tr:hover { background: #e3f2fd; }
-        .dataTables_wrapper .dt-buttons {
-            margin-bottom: 0.5em;
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,32,96,0.07);
+            border: none;
+            margin-bottom: 18px;
         }
-        .warehouse-legend-table {
-            margin: 0 auto;
-            margin-top: 10px;
-            font-size: 0.9rem;
+        .card-header {
+            background: #002060;
+            color: #fff;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 10px 10px 0 0;
+            padding: 8px 16px;
+        }
+        .card-body {
+            padding: 12px 16px;
+        }
+        .table-modern {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 0.81rem; /* reducido dos tamaños */
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,32,96,0.06);
+            overflow: hidden;
+            min-width: 350px;
             border-collapse: collapse;
         }
-        .warehouse-legend-table th, .warehouse-legend-table td {
-            border: 1px solid #ccc;
-            padding: 2px 8px;
-            text-align: center;
-            background: #f8f9fa;
+        .table-modern th, .table-modern thead th {
+            background: #002060 !important;
+            color: #fff !important;
+            font-weight: 600 !important;
+            font-size: 0.93rem !important; /* reducido dos tamaños */
+            border-bottom: 2px solid #e0e0e0 !important;
+            border-right: 1px solid #e0e0e0 !important;
+            text-align: left !important;
+            padding: 7px 8px !important;
+            letter-spacing: 0.01em;
+            transition: background 0.2s;
         }
-        /* Responsive leyenda */
-        details[open] > summary:before { content: "▼ "; }
-        details > summary:before { content: "► "; }
-        details { margin-top: 10px; }
-        /* Barra de progreso personalizada */
-        .progress { height: 20px; width:300px; margin: 0 auto; }
-        .progress-bar { font-weight: bold; }
-        /* Estilos personalizados */
-        #loading {
-            min-height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            border: 2px dashed #0d6efd;
+        .table-modern th:last-child, .table-modern td:last-child {
+            border-right: none !important;
+        }
+        .table-modern td {
+            background: #fff;
+            color: #222;
+            font-size: 0.81rem; /* reducido dos tamaños */
+            padding: 6px 8px !important;
+            border-bottom: 1px solid #f0f0f0;
+            border-right: 1px solid #e0e0e0;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .table-modern tbody tr:nth-child(even) td {
+            background: #f4f6fa;
+        }
+        .table-modern tbody tr:hover td {
+            background: #e3e9f6;
+        }
+        /* Eliminar flechas de ordenamiento de DataTables */
+        table.dataTable thead .sorting,
+        table.dataTable thead .sorting_asc,
+        table.dataTable thead .sorting_desc,
+        table.dataTable thead .sorting_asc_disabled,
+        table.dataTable thead .sorting_desc_disabled {
+            background-image: none !important;
+        }
+        .dataTables_wrapper .dt-buttons .btn {
+            margin-right: 4px;
+            font-size: 0.81rem;
+            padding: 3px 10px;
+            border-radius: 4px;
+            background: #e3e6ea;
+            color: #222;
+            border: 1px solid #d1d5db;
+        }
+        .dataTables_wrapper .dt-buttons .btn:hover {
+            background: #002060;
+            color: #fff;
+        }
+        .dataTables_filter input[type="search"] {
+            border-radius: 4px;
+            border: 1px solid #bfc5cc;
+            padding: 4px 8px;
+            font-size: 0.93rem;
+            background: #f8f9fa;
+            margin-left: 0.5em;
+        }
+        .status-badge {
+            padding: 2px 10px;
             border-radius: 12px;
-            background: #f8f9fa;
-            margin: 40px auto 0 auto;
-            max-width: 420px;
-            transition: border-color 0.2s, background 0.2s;
+            font-size: 0.88rem;
+            font-weight: 500;
+            background: #e9ecef;
+            color: #555;
         }
-        #loading.dragover {
-            border-color: #198754;
-            background: #e9fbe5;
+        .status-badge.completed { background: #d1f5e0; color: #217a4a; }
+        .status-badge.partial { background: #fff7d6; color: #a17d00; }
+        .status-badge.pending { background: #fbe3e3; color: #a12a2a; }
+        @media (max-width: 1200px) {
+            .table-modern { font-size: 0.78rem; }
+            .table-modern th, .table-modern td { padding: 5px 6px !important; }
         }
-        #loading .spinner-border {
-            width: 2.5rem;
-            height: 2.5rem;
+        @media (max-width: 900px) {
+            .table-modern { font-size: 0.75rem; }
+            .table-modern th, .table-modern td { padding: 4px 4px !important; }
         }
-        #loading .upload-icon {
-            font-size: 2.5rem;
-            color: #0d6efd;
-            margin-bottom: 10px;
-            display: block;
+        @media (max-width: 700px) {
+            .table-modern { font-size: 0.72rem; }
+            .table-modern th, .table-modern td { padding: 3px 3px !important; }
         }
-        #loading .upload-text {
-            font-size: 1.15rem;
-            color: #333;
-            margin-bottom: 8px;
+        @media (max-width: 600px) {
+            .table-modern, .table-modern thead, .table-modern tbody, .table-modern th, .table-modern td, .table-modern tr {
+                display: block;
+                width: 100%;
+            }
+            .table-modern thead {
+                display: none;
+            }
+            .table-modern tr {
+                margin-bottom: 10px;
+                border-radius: 8px;
+                box-shadow: 0 1px 4px rgba(0,32,96,0.04);
+                background: #fff;
+            }
+            .table-modern td {
+                border: none;
+                position: relative;
+                padding-left: 50%;
+                min-height: 28px;
+                white-space: pre-line;
+            }
+            .table-modern td:before {
+                position: absolute;
+                top: 7px;
+                left: 10px;
+                width: 45%;
+                white-space: pre-line;
+                font-weight: bold;
+                color: #002060;
+                content: attr(data-label);
+            }
         }
-        #loading .upload-hint {
-            font-size: 0.95rem;
-            color: #666;
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 4px;
+            margin: 0 2px;
+            border: 1px solid #e0e0e0;
+            background: #f4f6fa;
+            color: #002060 !important;
         }
-        #fileBtn {
-            display: none;
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #002060 !important;
+            color: #fff !important;
+            border: 1px solid #002060;
         }
+        .dataTables_length label, .dataTables_filter label {
+            font-weight: 500;
+            color: #002060;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .detalle-guia-info {
+            font-size: 0.68em !important; /* bajado 3 tamaños */
+            color: #8a8a8a !important;
+            font-style: normal !important; /* quitar cursiva */
+            margin-bottom: 0.5em;
+        }
+        /* Filtro discreto para almacén destino */
+        .filtro-almacen-tipo {
+            display: inline-block;
+            margin-left: 10px;
+            font-size: 0.82em;
+            color: #555;
+            background: #f4f6fa;
+            border-radius: 6px;
+            padding: 2px 8px;
+            border: 1px solid #e0e0e0;
+            vertical-align: middle;
+        }
+        .filtro-almacen-tipo label {
+            margin-bottom: 0;
+            margin-right: 8px;
+            font-weight: 400;
+            cursor: pointer;
+        }
+        .filtro-almacen-tipo input[type="checkbox"] {
+            margin-right: 3px;
+            vertical-align: middle;
+        }
+        /* Footer autor */
         .autor-footer {
             position: fixed;
-            right: 18px;
-            bottom: 18px;
+            right: 12px;
+            bottom: 12px;
             background: rgba(248,249,250,0.96);
             color: #444;
-            font-size: 0.97rem;
+            font-size: 0.93rem;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            padding: 7px 20px;
+            padding: 5px 16px;
             z-index: 2000;
             pointer-events: none;
             user-select: none;
             letter-spacing: 0.02em;
         }
+        /* Botón fullscreen tabla resumen */
+        #btnResumenFullscreen {
+            float: right;
+            margin-left: 10px;
+            margin-bottom: 6px;
+            font-size: 0.93rem;
+            background: #002060;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 4px 14px;
+            transition: background 0.2s;
+        }
+        #btnResumenFullscreen:hover {
+            background: #003080;
+            color: #fff;
+        }
+        .resumen-fullscreen-modal .modal-dialog {
+            max-width: 98vw;
+            width: 98vw;
+            margin: 1vw auto;
+        }
+        .resumen-fullscreen-modal .modal-content {
+            min-height: 90vh;
+            background: #f6f7fb;
+            border-radius: 12px;
+            box-shadow: 0 4px 32px rgba(0,32,96,0.13);
+            padding: 0;
+        }
+        .resumen-fullscreen-modal .modal-header {
+            background: #002060;
+            color: #fff;
+            border-radius: 12px 12px 0 0;
+            padding: 10px 24px;
+        }
+        .resumen-fullscreen-modal .modal-body {
+            padding: 18px 18px 10px 18px;
+        }
+        .resumen-fullscreen-modal .table-modern {
+            font-size: 0.93rem;
+            min-width: 900px;
+        }
+        @media (max-width: 900px) {
+            .resumen-fullscreen-modal .table-modern {
+                font-size: 0.85rem;
+                min-width: 600px;
+            }
+        }
+        /* Equis para cerrar pantalla completa */
+        #btnCerrarResumenFullscreen {
+            position: absolute;
+            top: 14px;
+            right: 22px;
+            z-index: 1052;
+            background: rgba(0,0,0,0.07);
+            border: none;
+            color: #002060;
+            font-size: 1.7rem;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            line-height: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #btnCerrarResumenFullscreen:hover {
+            background: #002060;
+            color: #fff;
+        }
+        .resumen-fullscreen-modal .modal-content {
+            position: relative;
+        }
+        .resumen-fullscreen-modal {
+            z-index: 1060 !important;
+        }
+        #detalleGuiaModal.modal {
+            z-index: 21000 !important;
+        }
+        .modal-backdrop.show {
+            z-index: 20999 !important;
+        }
+        #resumenFullscreenOverlay {
+            display: none;
+            position: fixed;
+            z-index: 20000;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #f6f7fb;
+            overflow: auto;
+        }
+        #resumenFullscreenOverlay .fullscreen-table-container {
+            max-width: 98vw;
+            margin: 2vh auto;
+            padding: 2vh 2vw;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 4px 32px rgba(0,32,96,0.13);
+            font-size: 125%;
+        }
+        #resumenFullscreenOverlay .fullscreen-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 18px;
+        }
+        #resumenFullscreenOverlay .fullscreen-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #002060;
+            margin: 0;
+        }
+        #btnCloseResumenFullscreen {
+            background: none;
+            border: none;
+            color: #002060;
+            font-size: 2rem;
+            font-weight: bold;
+            border-radius: 50%;
+            width: 38px;
+            height: 38px;
+            line-height: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #btnCloseResumenFullscreen:hover {
+            background: #002060;
+            color: #fff;
+        }
+        @media (max-width: 900px) {
+            #resumenFullscreenOverlay .fullscreen-table-container {
+                padding: 1vh 0.5vw;
+                min-width: 0;
+            }
+            #resumenFullscreenOverlay .fullscreen-title {
+                font-size: 1.05rem;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- Spinner de carga, oculto por defecto -->
-    <div id="customLoading" style="display:none;">
+    <div id="customLoading" style="display:none;" aria-live="polite" aria-busy="true" role="alertdialog">
         <div class="text-center w-100">
-            <div class="spinner-border text-primary" role="status"></div>
-            <div class="progress mt-3">
+            <div class="spinner-border text-primary" role="status" aria-label="Cargando"></div>
+            <div class="progress mt-3" aria-label="Progreso de carga">
                 <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width:0%">0%</div>
             </div>
             <div id="customLoadingMsg" class="mt-2 fw-bold">Cargando archivo...</div>
@@ -135,19 +389,19 @@
     </div>
 
     <!-- Área de carga visible por defecto -->
-    <div id="loading" tabindex="0" title="Haz clic o arrastra tu archivo Excel aquí">
+    <div id="loading" tabindex="0" title="Haz clic o arrastra tu archivo Excel aquí" aria-label="Área de carga de archivo Excel" role="button">
         <div class="w-100 text-center py-3">
-            <span class="upload-icon">
+            <span class="upload-icon" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" fill="currentColor" class="bi bi-cloud-arrow-up" viewBox="0 0 16 16">
                   <path fill-rule="evenodd" d="M8 0a5.53 5.53 0 0 0-5.473 6.01A4.002 4.002 0 0 0 4 16h8a4 4 0 0 0 2.473-7.99A5.53 5.53 0 0 0 8 0Zm0 1a4.53 4.53 0 0 1 4.473 5.01.5.5 0 0 0 .527.59A3 3 0 0 1 12 15H4a3 3 0 0 1-.999-5.4.5.5 0 0 0 .527-.59A4.53 4.53 0 0 1 8 1Zm.5 7.5V13a.5.5 0 0 1-1 0V8.5H5.354a.5.5 0 0 1-.353-.854l2.146-2.147a.5.5 0 0 1 .707 0l2.146 2.147a.5.5 0 0 1-.353.854H8.5Z"/>
                 </svg>
             </span>
             <div class="upload-text fw-bold">Haz clic o arrastra tu archivo Excel aquí</div>
             <div class="upload-hint">Formatos permitidos: <b>.xlsx, .xls</b></div>
-            <div id="errorMsg"></div>
+            <div id="errorMsg" role="alert" aria-live="assertive"></div>
         </div>
     </div>
-    <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none;">
+    <input type="file" id="excelFile" accept=".xlsx,.xls" style="display:none;" aria-label="Seleccionar archivo Excel">
 
     <div class="container-fluid mt-3" style="display:none;" id="mainContent">
         <!-- PESTAÑAS -->
@@ -174,18 +428,18 @@
                 <h1 class="text-center">Dashboard de Transferencias</h1>
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card" aria-label="Resumen de estados">
                             <div class="card-header">Resumen de Estados</div>
                             <div class="card-body">
-                                <canvas id="statusChart"></canvas>
+                                <canvas id="statusChart" aria-label="Gráfico de estados"></canvas>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card" aria-label="Pendientes por almacén">
                             <div class="card-header">Pendientes por Almacén</div>
                             <div class="card-body">
-                                <canvas id="warehouseChart"></canvas>
+                                <canvas id="warehouseChart" aria-label="Gráfico de almacenes"></canvas>
                                 <details open>
                                     <summary>Ver leyenda de almacenes</summary>
                                     <div id="warehouseLegend"></div>
@@ -194,10 +448,10 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="card">
+                        <div class="card" aria-label="Pendientes por fecha">
                             <div class="card-header">Pendientes por Fecha</div>
                             <div class="card-body">
-                                <canvas id="dateChart"></canvas>
+                                <canvas id="dateChart" aria-label="Gráfico de fechas"></canvas>
                             </div>
                         </div>
                     </div>
@@ -207,21 +461,21 @@
             <div class="tab-pane fade" id="tablaGeneralTab" role="tabpanel" aria-labelledby="tablaGeneral-tab">
                 <div class="row mb-3">
                     <div class="col-12 text-center">
-                        <label class="me-3 fw-bold">Filtrar por Estado Documento:</label>
+                        <label class="me-3 fw-bold" for="filtroPendiente">Filtrar por Estado Documento:</label>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input estado-filter" type="checkbox" id="filtroPendiente" value="Pendiente-Total" checked>
+                            <input class="form-check-input estado-filter" type="checkbox" id="filtroPendiente" value="Pendiente-Total" checked aria-checked="true">
                             <label class="form-check-label" for="filtroPendiente">Pendiente-Total</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input estado-filter" type="checkbox" id="filtroParcial" value="Aceptado-Parcial" checked>
+                            <input class="form-check-input estado-filter" type="checkbox" id="filtroParcial" value="Aceptado-Parcial" checked aria-checked="true">
                             <label class="form-check-label" for="filtroParcial">Aceptado-Parcial</label>
                         </div>
                         <div class="form-check form-check-inline">
-                            <input class="form-check-input estado-filter" type="checkbox" id="filtroTotal" value="Aceptado-Total" checked>
+                            <input class="form-check-input estado-filter" type="checkbox" id="filtroTotal" value="Aceptado-Total" checked aria-checked="true">
                             <label class="form-check-label" for="filtroTotal">Aceptado-Total</label>
                         </div>
                         <div class="form-check form-check-inline ms-4">
-                            <input class="form-check-input" type="checkbox" id="filtroDiferenteCero">
+                            <input class="form-check-input" type="checkbox" id="filtroDiferenteCero" aria-checked="false">
                             <label class="form-check-label" for="filtroDiferenteCero">Solo Diferencia ≠ 0</label>
                         </div>
                     </div>
@@ -229,26 +483,32 @@
                 <div class="row">
                     <div class="col-12">
                         <div style="overflow-x:auto;">
-                            <table id="estadoTable" class="display nowrap table table-bordered" style="width:100%">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th>Origen Sucursal</th>
-                                        <th>Origen Almacen</th>
-                                        <th>Origen Documento</th>
-                                        <th>Origen Fecha</th>
-                                        <th>Producto Codigo</th>
-                                        <th>Producto Descripcion</th>
-                                        <th>Producto Cantidad</th>
-                                        <th>Destino Sucursal</th>
-                                        <th>Destino Almacen</th>
-                                        <th>Destino Fecha</th>
-                                        <th>Destino Cantidad</th>
-                                        <th>Diferencia de Cantidades</th>
-                                        <th>Estado Documento</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                            <div class="table-responsive mb-4">
+                                <h3 class="mb-3">
+                                    <span class="bi bi-list-columns-reverse me-2 text-primary"></span>
+                                    Detalle de Movimientos de Transferencia
+                                </h3>
+                                <table id="estadoTable" class="table-modern" style="width:100%" aria-label="Detalle de movimientos de transferencia">
+                                    <thead>
+                                        <tr>
+                                            <th class="grupo-origen">Sucursal</th>
+                                            <th class="grupo-origen">Almacén</th>
+                                            <th class="grupo-origen">Documento</th>
+                                            <th class="grupo-origen">Fecha</th>
+                                            <th>Código Producto</th>
+                                            <th>Descripción</th>
+                                            <th>Cant. Origen</th>
+                                            <th class="grupo-destino">Sucursal</th>
+                                            <th class="grupo-destino">Almacén</th>
+                                            <th class="grupo-destino">Fecha</th>
+                                            <th>Cant. Destino</th>
+                                            <th>Diferencia</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -258,19 +518,23 @@
                 <div class="row mt-2 mb-3">
                     <div class="col-md-2">
                         <label for="filtroDestinoResumen" class="form-label">Almacén Destino</label>
-                        <select id="filtroDestinoResumen" class="form-select resumen-filter">
+                        <select id="filtroDestinoResumen" class="form-select resumen-filter" aria-label="Filtrar por almacén destino">
                             <option value="">Todos</option>
                         </select>
+                        <span class="filtro-almacen-tipo" id="filtroTipoAlmacen">
+                            <label><input type="checkbox" value="Almacen" checked>Almacenes</label>
+                            <label><input type="checkbox" value="Tienda" checked>Tiendas</label>
+                        </span>
                     </div>
                     <div class="col-md-2">
                         <label for="filtroOrigenResumen" class="form-label">Almacén Origen</label>
-                        <select id="filtroOrigenResumen" class="form-select resumen-filter">
+                        <select id="filtroOrigenResumen" class="form-select resumen-filter" aria-label="Filtrar por almacén origen">
                             <option value="">Todos</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label for="filtroEstadoResumen" class="form-label">Estado Documento</label>
-                        <select id="filtroEstadoResumen" class="form-select resumen-filter" multiple>
+                        <select id="filtroEstadoResumen" class="form-select resumen-filter" multiple aria-label="Filtrar por estado documento">
                             <option value="Pendiente-Total" selected>Pendiente-Total</option>
                             <option value="Aceptado-Parcial" selected>Aceptado-Parcial</option>
                             <option value="Aceptado-Total" selected>Aceptado-Total</option>
@@ -278,53 +542,72 @@
                     </div>
                     <div class="col-md-2">
                         <label for="filtroFechaIniResumen" class="form-label">Fecha Desde</label>
-                        <input type="date" id="filtroFechaIniResumen" class="form-control resumen-filter">
+                        <input type="date" id="filtroFechaIniResumen" class="form-control resumen-filter" aria-label="Filtrar desde fecha">
                     </div>
                     <div class="col-md-2">
                         <label for="filtroFechaFinResumen" class="form-label">Fecha Hasta</label>
-                        <input type="date" id="filtroFechaFinResumen" class="form-control resumen-filter">
+                        <input type="date" id="filtroFechaFinResumen" class="form-control resumen-filter" aria-label="Filtrar hasta fecha">
                     </div>
                 </div>
-                <div style="overflow-x:auto;">
-                    <table id="resumenTable" class="display nowrap table table-bordered" style="width:100%">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>Almacén Destino</th>
-                                <th>Almacén Origen</th>
-                                <th>Guía Remisión</th>
-                                <th>Fecha Guía</th>
-                                <th>Estado Documento</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h3 class="mb-0">
+                            <span class="bi bi-clipboard-data me-2 text-success"></span>
+                            Resumen de Guías de Transferencia
+                        </h3>
+                        <button id="btnResumenFullscreen" title="Ver tabla en pantalla completa">
+                            <span class="bi bi-arrows-fullscreen"></span> Pantalla Completa
+                        </button>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <div class="table-responsive mb-4">
+                            <table id="resumenTable" class="table-modern" style="width:100%" aria-label="Resumen de guías de transferencia">
+                                <thead>
+                                    <tr>
+                                        <th>Almacén Destino</th>
+                                        <th>Almacén Origen</th>
+                                        <th>Guía Remisión</th>
+                                        <th>Fecha Guía</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <!-- Modal para detalle de guía -->
-    <div class="modal fade" id="detalleGuiaModal" tabindex="-1" aria-labelledby="detalleGuiaLabel" aria-hidden="true">
+    <div class="modal fade" id="detalleGuiaModal" tabindex="-1" aria-labelledby="detalleGuiaLabel" aria-hidden="true" role="dialog">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="detalleGuiaLabel">Detalle de Guía</h5>
+            <div class="modal-title-toolbar w-100">
+              <span>
+                <span class="modal-title h5" id="detalleGuiaLabel">Detalle de Guía</span>
+              </span>
+              <div class="detalle-guia-toolbar"></div>
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
           <div class="modal-body">
+            <div id="detalleGuiaInfo" class="detalle-guia-info mb-2"></div>
+            <!-- Filtros para mostrar toda la guía o solo pendientes -->
             <div class="mb-2">
-              <label class="me-2 fw-bold">Mostrar:</label>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="detalleFiltro" id="detalleTodo" value="todo" checked>
-                <label class="form-check-label" for="detalleTodo">Toda la guía</label>
+                <input class="form-check-input" type="radio" name="detalleFiltro" id="detalleFiltroTodo" value="todo" checked>
+                <label class="form-check-label" for="detalleFiltroTodo">Ver toda la guía</label>
               </div>
               <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="detalleFiltro" id="detallePendiente" value="pendiente">
-                <label class="form-check-label" for="detallePendiente">Solo pendientes</label>
+                <input class="form-check-input" type="radio" name="detalleFiltro" id="detalleFiltroPendiente" value="pendiente">
+                <label class="form-check-label" for="detalleFiltroPendiente">Solo cantidad pendiente</label>
               </div>
             </div>
             <div style="overflow-x:auto;">
-              <table class="table table-bordered table-sm" id="detalleGuiaTable">
-                <thead class="table-primary">
+              <table class="table-modern" id="detalleGuiaTable" aria-label="Detalle de la guía seleccionada" style="width:100%">
+                <thead>
                   <tr>
                     <th>Producto Código</th>
                     <th>Producto Descripción</th>
@@ -339,6 +622,40 @@
           </div>
         </div>
       </div>
+    </div>
+    <!-- Modal pantalla completa resumen -->
+    <div class="modal fade resumen-fullscreen-modal" id="modalResumenFullscreen" tabindex="-1" aria-labelledby="modalResumenFullscreenLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <button id="btnCerrarResumenFullscreen" title="Cerrar pantalla completa" type="button">&times;</button>
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalResumenFullscreenLabel">Resumen de Guías de Transferencia (Pantalla Completa)</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div id="contenedorTablaResumenFullscreen"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Agrega este overlay al final del <body> -->
+    <div id="resumenFullscreenOverlay" tabindex="-1" aria-modal="true" role="dialog" style="display:none;">
+        <div class="fullscreen-table-container">
+            <div class="fullscreen-header" style="gap:18px;">
+                <span class="fullscreen-title">Resumen de Guías de Transferencia (Pantalla Completa)</span>
+                <!-- Barra de zoom -->
+                <div id="zoomBarWrapper" style="display:flex;align-items:center;gap:8px;">
+                    <label for="zoomBar" style="font-size:1rem;color:#002060;font-weight:500;margin-bottom:0;">Zoom:</label>
+                    <input type="range" id="zoomBar" min="10" max="150" value="100" step="1" style="width:110px;">
+                    <span id="zoomValue" style="min-width:38px;display:inline-block;font-size:1rem;color:#002060;">100%</span>
+                </div>
+                <button id="btnExportarExcelFullscreen" title="Descargar detalle completo en Excel" style="font-size:1.5rem;background:none;border:none;color:#002060;cursor:pointer;">
+                    <span class="bi bi-file-earmark-excel"></span> <span style="font-size:1rem;">Descargar Excel</span>
+                </button>
+                <button id="btnCloseResumenFullscreen" title="Cerrar pantalla completa" style="margin-left:8px;">&times;</button>
+            </div>
+            <div id="resumenFullscreenTableWrapper"></div>
+        </div>
     </div>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
@@ -357,15 +674,79 @@ let processedData = [];
 let estadoTable, resumenTable;
 let statusChart, warehouseChart, dateChart;
 
-function showError(msg) {
-    $('#errorMsg').text(msg);
+// Control de estado para pantalla completa
+let resumenFullscreenActivo = false;
+
+// Botón para abrir pantalla completa
+$('#btnResumenFullscreen').on('click', function() {
+    if (resumenFullscreenActivo) return;
+    resumenFullscreenActivo = true;
+
+    // Clona SOLO el HTML visible de la tabla (con encabezados y filas actuales)
+    let $clonedTable = $('#resumenTable').clone();
+    $clonedTable.removeAttr('id');
+    $clonedTable.removeClass('dataTable no-footer');
+    $clonedTable.find('tr').removeClass();
+    $clonedTable.find('th, td').removeClass();
+    $clonedTable.find('tfoot').remove();
+
+    // RECONSTRUIR EL THEAD MANUALMENTE
+    // Borra el thead actual y crea uno nuevo con los títulos originales
+    const headers = [
+        "Almacén Destino",
+        "Almacén Origen",
+        "Guía Remisión",
+        "Fecha Guía",
+        "Estado"
+    ];
+    $clonedTable.find('thead').remove();
+    const thead = $('<thead><tr></tr></thead>');
+    headers.forEach(h => {
+        thead.find('tr').append(`<th>${h}</th>`);
+    });
+    $clonedTable.prepend(thead);
+
+    // Limpia el wrapper y agrega la tabla clonada
+    $('#resumenFullscreenTableWrapper').html('').append($clonedTable);
+
+    // Muestra el overlay
+    $('#resumenFullscreenOverlay').fadeIn(120).focus();
+    $('body').css('overflow', 'hidden');
+});
+
+// Botón y tecla ESC para cerrar pantalla completa
+$('#btnCloseResumenFullscreen').on('click', cerrarPantallaCompletaResumen);
+$('#resumenFullscreenOverlay').on('keydown', function(e) {
+    if (e.key === "Escape") cerrarPantallaCompletaResumen();
+});
+function cerrarPantallaCompletaResumen() {
+    if (!resumenFullscreenActivo) return;
+    resumenFullscreenActivo = false;
+    $('#resumenFullscreenTableWrapper').html('');
+    $('#resumenFullscreenOverlay').fadeOut(120);
+    $('body').css('overflow', '');
+    // Limpia zoom
+    $('#zoomBar').val(100);
+    $('#zoomValue').text('100%');
 }
 
-// Barra de carga mejorada
+// Filtro almacén destino: actualizar tabla inmediatamente
+$(document).on('change', '#filtroTipoAlmacen input[type="checkbox"]', function() {
+    renderResumenTable();
+});
+
+// --- UTILIDADES DE UI ---
+function showError(msg) {
+    $('#errorMsg').text(msg);
+    hideLoadingBar();
+    $('#loading').show();
+    $('#mainContent').hide();
+}
 function showLoadingBar(msg = "Cargando archivo...") {
     $('#customLoading').show();
     $('#progressBar').css('width', '0%').text('0%');
     $('#customLoadingMsg').text(msg);
+    $('#loading').addClass('disabled').css('pointer-events', 'none').attr('aria-busy', 'true');
 }
 function updateLoadingBar(percent, msg) {
     $('#progressBar').css('width', percent + '%').text(percent + '%');
@@ -373,10 +754,41 @@ function updateLoadingBar(percent, msg) {
 }
 function hideLoadingBar() {
     $('#customLoading').hide();
+    $('#loading').removeClass('disabled').css('pointer-events', '').attr('aria-busy', 'false');
 }
 
-function handleFile(e) {
-    const file = e.target.files ? e.target.files[0] : e;
+// --- FLUJO DE IMPORTACIÓN ---
+const columnasRequeridas = [
+    "Transferencia Grupo",
+    "Origen Sucursal",
+    "Origen Almacen",
+    "Origen Documento",
+    "Origen Idmotivo",
+    "Origen Motivo",
+    "Origen Fecha",
+    "Producto Codigo",
+    "Producto Descripcion",
+    "Producto Grupo",
+    "Producto Sub Grupo",
+    "Producto U.M.",
+    "Producto Cantidad",
+    "Destino Sucursal",
+    "Destino Almacen",
+    "Destino Documento",
+    "Destino Idmotivo",
+    "Destino Motivo",
+    "Destino Fecha",
+    "Destino Cantidad",
+    "Diferencia de Cantidades"
+];
+
+function validarColumnas(datos) {
+    if (!Array.isArray(datos) || !datos.length) return columnasRequeridas;
+    const colsArchivo = Object.keys(datos[0]);
+    return columnasRequeridas.filter(col => !colsArchivo.includes(col));
+}
+
+function handleFileInput(file) {
     if (!file) return;
     if (!file.name.match(/\.(xlsx|xls)$/i)) {
         showError('Archivo no válido. Selecciona un archivo Excel (.xlsx o .xls)');
@@ -398,11 +810,16 @@ function handleFile(e) {
                 const data = new Uint8Array(e.target.result);
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                rawData = XLSX.utils.sheet_to_json(firstSheet);
+                rawData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
                 if (!rawData.length) throw new Error('El archivo está vacío o no tiene datos.');
+                const faltantes = validarColumnas(rawData);
+                if (faltantes.length) {
+                    throw new Error('Faltan columnas requeridas: ' + faltantes.join(', '));
+                }
                 processData();
                 initializeTables();
                 renderResumenTable();
+                updateCharts();
                 updateLoadingBar(100, '¡Carga exitosa!');
                 setTimeout(() => {
                     hideLoadingBar();
@@ -410,44 +827,92 @@ function handleFile(e) {
                     $('#mainContent').show();
                 }, 800);
             } catch (err) {
-                hideLoadingBar();
                 showError('Error al procesar el archivo: ' + err.message);
             }
         }, 500);
     };
+    reader.onerror = function() {
+        showError('No se pudo leer el archivo.');
+    };
     reader.readAsArrayBuffer(file);
 }
 
+// --- EVENTOS DE IMPORTACIÓN ---
+$(function () {
+    $('#loading').on('click keypress', function(e) {
+        if (e.type === 'click' || e.key === 'Enter' || e.key === ' ') {
+            if (!$('#loading').hasClass('disabled')) {
+                $('#excelFile').val('');
+                $('#excelFile').trigger('click');
+            }
+        }
+    });
+    $('#excelFile').on('change', function(e) {
+        const file = e.target.files && e.target.files[0];
+        handleFileInput(file);
+    });
+    $('#loading').on('dragover', function(e) {
+        e.preventDefault();
+        if (!$(this).hasClass('disabled')) $(this).addClass('dragover');
+    });
+    $('#loading').on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+    $('#loading').on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        if ($(this).hasClass('disabled')) return;
+        const files = e.originalEvent.dataTransfer.files;
+        if (files && files.length) {
+            handleFileInput(files[0]);
+        }
+    });
+    $('#errorMsg').on('click', function() {
+        $('#excelFile').val('');
+        $('#loading').show();
+        $('#mainContent').hide();
+        hideLoadingBar();
+        showError('');
+        rawData = [];
+        processedData = [];
+        if (estadoTable) { estadoTable.clear().draw(); }
+        if (resumenTable) { resumenTable.clear().draw(); }
+        if (statusChart) { statusChart.destroy(); statusChart = null; }
+        if (warehouseChart) { warehouseChart.destroy(); warehouseChart = null; }
+        if (dateChart) { dateChart.destroy(); dateChart = null; }
+    });
+    $(document).on('change', '.estado-filter, #filtroDiferenteCero', renderEstadoTable);
+    $(document).on('change', '.resumen-filter', renderResumenTable);
+});
+
+// --- CONVERSIÓN DE FECHAS ---
 function parseDate(date) {
     if (!date) return '';
     if (typeof date === 'number') {
-        // Excel date number
         return XLSX.SSF.format('yyyy-mm-dd', date);
     }
     if (typeof date === 'string') {
-        // Try to parse dd/mm/yyyy or yyyy-mm-dd
         let parts;
         if (date.includes('/')) {
             parts = date.split('/');
             if (parts.length === 3) {
-                // dd/mm/yyyy
                 return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
             }
         }
         if (date.includes('-')) {
             parts = date.split('-');
             if (parts.length === 3 && parts[0].length === 4) {
-                // yyyy-mm-dd
                 return date;
             }
         }
-        // Fallback
         const d = new Date(date);
         if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
     }
     return '';
 }
 
+// --- PROCESAMIENTO DE DATOS ---
 function processData() {
     const groupedByDocument = {};
     rawData.forEach(row => {
@@ -455,6 +920,7 @@ function processData() {
         row['Destino Cantidad'] = Number(row['Destino Cantidad']) || 0;
         row['Diferencia de Cantidades'] = Number(row['Diferencia de Cantidades']) || (row['Producto Cantidad'] - row['Destino Cantidad']);
         row['Origen Fecha'] = parseDate(row['Origen Fecha']);
+        row['Destino Fecha'] = parseDate(row['Destino Fecha']);
         const doc = row['Origen Documento'];
         if (!groupedByDocument[doc]) groupedByDocument[doc] = [];
         groupedByDocument[doc].push(row);
@@ -480,64 +946,87 @@ function processData() {
     });
 }
 
+// --- TABLA GENERAL ---
 function initializeTables() {
-    if (!$.fn.DataTable.isDataTable('#estadoTable')) {
-        estadoTable = $('#estadoTable').DataTable({
-            dom: 'Bfrtip',
-            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
-            scrollX: true,
-            scrollY: '400px',
-            scrollCollapse: true,
-            paging: true,
-            pageLength: 25,
-            deferRender: true,
-            data: [],
-            columns: [
-                { data: 'Origen Sucursal' },
-                { data: 'Origen Almacen' },
-                { data: 'Origen Documento' },
-                { data: 'Origen Fecha' },
-                { data: 'Producto Codigo' },
-                { data: 'Producto Descripcion' },
-                { data: 'Producto Cantidad' },
-                { data: 'Destino Sucursal' },
-                { data: 'Destino Almacen' },
-                { data: 'Destino Fecha' },
-                { data: 'Destino Cantidad' },
-                { data: 'Diferencia de Cantidades' },
-                { data: 'Estado Documento', render: function(data) {
-                    let className = '';
-                    if (data === 'Aceptado-Parcial') className = 'partial';
-                    else if (data === 'Pendiente-Total') className = 'pending';
-                    else className = 'completed';
-                    return `<span class="status-badge ${className}" title="${data}">${data}</span>`;
-                }}
-            ],
-            language: {
-                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es_es.json',
-                emptyTable: "No hay datos para mostrar",
-                loadingRecords: "Cargando...",
-                processing: "Procesando...",
-                search: "Buscar:",
-                lengthMenu: "Mostrar _MENU_ registros",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                paginate: {
-                    first: "Primero",
-                    last: "Último",
-                    next: "Siguiente",
-                    previous: "Anterior"
+    if ($.fn.DataTable.isDataTable('#estadoTable')) {
+        estadoTable.clear().destroy();
+        $('#estadoTable tbody').empty();
+    }
+    estadoTable = $('#estadoTable').DataTable({
+        dom: 'Bfrtip',
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf',
+            {
+                extend: 'print',
+                text: 'Imprimir', // <-- Cambiado aquí
+                title: 'Resumen de Guías de Transferencia',
+                customize: function (win) {
+                    $(win.document.body).css('background', '#f6f7fb');
+                    $(win.document.body).find('table')
+                        .addClass('table-modern')
+                        .css('font-size', '0.93rem');
                 }
             }
-        });
-    }
-    renderEstadoTable();
-    $('.estado-filter, #filtroDiferenteCero').off('change').on('change', function() {
-        renderEstadoTable();
+        ],
+        scrollX: true,
+        scrollY: '400px',
+        scrollCollapse: true,
+        paging: true,
+        pageLength: 25,
+        deferRender: true,
+        data: [],
+        columns: [
+            { data: 'Origen Sucursal' },
+            { data: 'Origen Almacen' },
+            { data: 'Origen Documento' },
+            { data: 'Origen Fecha' },
+            { data: 'Producto Codigo' },
+            { data: 'Producto Descripcion' },
+            { data: 'Producto Cantidad' },
+            { data: 'Destino Sucursal' },
+            { data: 'Destino Almacen' },
+            { data: 'Destino Fecha' },
+            { data: 'Destino Cantidad' },
+            { data: 'Diferencia de Cantidades' },
+            { data: 'Estado Documento', render: function(data) {
+                let className = '';
+                if (data === 'Aceptado-Parcial') className = 'partial';
+                else if (data === 'Pendiente-Total') className = 'pending';
+                else className = 'completed';
+                return `<span class="status-badge ${className}" title="${data}">${data}</span>`;
+            }}
+        ],
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es_es.json',
+            emptyTable: "No hay datos para mostrar",
+            loadingRecords: "Cargando...",
+            processing: "Procesando...",
+            search: "Buscar:",
+            lengthMenu: "Mostrar _MENU_ registros",
+            info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
+            infoEmpty: "Mostrando 0 a 0 de 0 registros",
+            paginate: {
+                first: "Primero",
+                last: "Último",
+                next: "Siguiente",
+                previous: "Anterior"
+            }
+        },
+        createdRow: function(row, data, dataIndex) {
+            const labels = [
+                "Sucursal", "Almacén", "Documento", "Fecha", "Código Producto", "Descripción",
+                "Cant. Origen", "Sucursal", "Almacén", "Fecha", "Cant. Destino", "Diferencia", "Estado"
+            ];
+            $('td', row).each(function(i) {
+                $(this).attr('data-label', labels[i]);
+            });
+        }
     });
+    renderEstadoTable();
 }
 
 function renderEstadoTable() {
+    if (!estadoTable) return;
     const estadosSeleccionados = $('.estado-filter:checked').map(function() {
         return this.value;
     }).get();
@@ -550,10 +1039,8 @@ function renderEstadoTable() {
     updateCharts();
 }
 
-// ----------- RESUMEN DE GUÍAS -----------
-
+// --- RESUMEN DE GUÍAS ---
 function buildResumenTable() {
-    // Agrupa por documento único
     const resumenDocs = {};
     processedData.forEach(row => {
         const doc = row['Origen Documento'];
@@ -573,18 +1060,25 @@ function buildResumenTable() {
 function fillResumenFilters(resumenData) {
     const origenes = [...new Set(resumenData.map(r => r['Almacén Origen']).filter(Boolean))].sort();
     const destinos = [...new Set(resumenData.map(r => r['Almacén Destino']).filter(Boolean))].sort();
+    const origenSel = $('#filtroOrigenResumen').val() || "";
+    const destinoSel = $('#filtroDestinoResumen').val() || "";
     $('#filtroOrigenResumen').html('<option value="">Todos</option>' + origenes.map(o => `<option value="${o}">${o}</option>`).join(''));
     $('#filtroDestinoResumen').html('<option value="">Todos</option>' + destinos.map(d => `<option value="${d}">${d}</option>`).join(''));
+    $('#filtroOrigenResumen').val(origenSel);
+    $('#filtroDestinoResumen').val(destinoSel);
 }
 
 function renderResumenTable() {
     const resumenData = buildResumenTable();
-    const filtroOrigen = $('#filtroOrigenResumen').val();
-    const filtroDestino = $('#filtroDestinoResumen').val();
+    const filtroOrigen = $('#filtroOrigenResumen').val() || "";
+    const filtroDestino = $('#filtroDestinoResumen').val() || "";
     const filtroEstados = $('#filtroEstadoResumen').val() || [];
     const filtroFechaIni = $('#filtroFechaIniResumen').val();
     const filtroFechaFin = $('#filtroFechaFinResumen').val();
-
+    // Nuevo: filtro por tipo de almacén destino
+    const tiposChecked = $('#filtroTipoAlmacen input[type="checkbox"]:checked').map(function() {
+        return this.value;
+    }).get();
     let filtered = resumenData.filter(row => {
         let ok = true;
         if (filtroOrigen && row['Almacén Origen'] !== filtroOrigen) ok = false;
@@ -592,13 +1086,38 @@ function renderResumenTable() {
         if (filtroEstados.length && !filtroEstados.includes(row['Estado Documento'])) ok = false;
         if (filtroFechaIni && row['Fecha Guía'] < filtroFechaIni) ok = false;
         if (filtroFechaFin && row['Fecha Guía'] > filtroFechaFin) ok = false;
+        // Filtro por tipo de almacén destino (Almacen/Tienda)
+        if (tiposChecked.length > 0) {
+            let match = false;
+            for (let tipo of tiposChecked) {
+                if (row['Almacén Destino'] && row['Almacén Destino'].toLowerCase().startsWith(tipo.toLowerCase())) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) ok = false;
+        }
         return ok;
     });
-
-    if (!$.fn.DataTable.isDataTable('#resumenTable')) {
+    if ($.fn.DataTable.isDataTable('#resumenTable')) {
+        resumenTable.clear().rows.add(filtered).draw();
+    } else {
         resumenTable = $('#resumenTable').DataTable({
             dom: 'Bfrtip',
-            buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+            buttons: [
+                'copy', 'csv', 'excel', 'pdf',
+                {
+                    extend: 'print',
+                    text: 'Imprimir', // <-- Cambiado aquí
+                    title: 'Resumen de Guías de Transferencia',
+                    customize: function (win) {
+                        $(win.document.body).css('background', '#f6f7fb');
+                        $(win.document.body).find('table')
+                            .addClass('table-modern')
+                            .css('font-size', '0.93rem');
+                    }
+                }
+            ],
             scrollX: true,
             scrollY: '300px',
             scrollCollapse: true,
@@ -638,39 +1157,27 @@ function renderResumenTable() {
                 }
             }
         });
-    } else {
-        resumenTable.clear().rows.add(filtered).draw();
     }
     fillResumenFilters(resumenData);
 }
 
-$(document).on('change', '.resumen-filter', function() {
-    renderResumenTable();
-});
-
-// ----------- GRÁFICOS -----------
-
+// --- GRÁFICOS ---
 function updateCharts() {
-    // Filtra los datos según los estados seleccionados
     const estadosSeleccionados = $('.estado-filter:checked').map(function() {
         return this.value;
     }).get();
     const filtered = processedData.filter(row => estadosSeleccionados.includes(row['Estado Documento']));
-
-    // 1. Resumen de estados (por cantidad de documentos únicos)
     const statusCounts = { 'Aceptado-Total': 0, 'Aceptado-Parcial': 0, 'Pendiente-Total': 0 };
     const uniqueDocs = {};
-    filtered.forEach(row => {
+    filtered.forEach(function(row) {
         const doc = row['Origen Documento'];
         if (!uniqueDocs[doc]) {
             uniqueDocs[doc] = row['Estado Documento'];
             statusCounts[row['Estado Documento']]++;
         }
     });
-
-    // 2. Pendientes por almacén (por cantidad de documentos únicos)
     const warehouseDocs = {};
-    Object.keys(uniqueDocs).forEach(doc => {
+    Object.keys(uniqueDocs).forEach(function(doc) {
         const estado = uniqueDocs[doc];
         if (estado !== 'Aceptado-Total') {
             const row = filtered.find(r => r['Origen Documento'] === doc);
@@ -692,18 +1199,14 @@ function updateCharts() {
             tension: 0.1
         }]
     };
-
-    // Renderiza la leyenda debajo del gráfico (ahora dentro de <details>)
     let legendHtml = '<table class="warehouse-legend-table"><thead><tr><th>#</th><th>Almacén</th><th>Pendientes</th></tr></thead><tbody>';
-    sortedWarehouses.forEach((w, i) => {
+    sortedWarehouses.forEach(function(w, i) {
         legendHtml += `<tr><td>${i + 1}</td><td>${w}</td><td>${warehouseDocs[w]}</td></tr>`;
     });
     legendHtml += '</tbody></table>';
     $('#warehouseLegend').html(legendHtml);
-
-    // 3. Pendientes por fecha (por cantidad de documentos únicos)
     const dateDocs = {};
-    filtered.forEach(row => {
+    filtered.forEach(function(row) {
         const date = row['Origen Fecha'];
         if (!dateDocs[date]) dateDocs[date] = 0;
         dateDocs[date]++;
@@ -721,8 +1224,6 @@ function updateCharts() {
             fill: true
         }]
     };
-
-    // Actualiza los gráficos
     if (statusChart) {
         statusChart.data.datasets[0].data = Object.values(statusCounts);
         statusChart.update();
@@ -738,28 +1239,25 @@ function updateCharts() {
                     borderWidth: 1
                 }]
             },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                const label = tooltipItem.label || '';
-                                const value = tooltipItem.raw || 0;
-                                const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? ((value / total) * 100).toFixed(2) + '%' : '0%';
-                                return `${label}: ${value} (${percentage})`;
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    const label = tooltipItem.label || '';
+                                    const value = tooltipItem.raw || 0;
+                                    const total = tooltipItem.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(2) + '%' : '0%';
+                                    return `${label}: ${value} (${percentage})`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
     }
-    // Gráfico de almacenes
     if (warehouseChart) {
         warehouseChart.data.labels = warehouseNumbers.map(n => n.toString());
         warehouseChart.data.datasets[0].data = sortedWarehouses.map(w => warehouseDocs[w]);
@@ -789,7 +1287,6 @@ function updateCharts() {
             }
         });
     }
-    // Gráfico de fechas
     if (dateChart) {
         dateChart.data.labels = sortedDates;
         dateChart.data.datasets[0].data = sortedDates.map(d => dateDocs[d]);
@@ -810,70 +1307,211 @@ function updateCharts() {
                         }
                     }
                 },
-                scales: {
-                    y: { beginAtZero: true, title: { display: true, text: 'Guías Pendientes' } },
-                    x: { title: { display: true, text: 'Fecha de Origen' } }
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Guías Pendientes' } },
+                        x: { title: { display: true, text: 'Fecha de Origen' } }
+                    }
                 }
-            }
-        });
+            });
     }
 }
 
-$(document).ready(function() {
-    // Haz que todo el área de carga sea clickeable
-    $('#loading').on('click keypress', function(e) {
-        if (e.type === 'click' || (e.type === 'keypress' && (e.key === 'Enter' || e.key === ' '))) {
-            $('#excelFile').val('');
-            $('#excelFile').click();
-        }
-    });
-    $('#excelFile').on('change', handleFile);
-
-    // Drag & drop visual feedback
-    $('#loading').on('dragover', function(e) { e.preventDefault(); e.stopPropagation(); $(this).addClass('dragover'); });
-    $('#loading').on('dragleave drop', function(e) { e.preventDefault(); e.stopPropagation(); $(this).removeClass('dragover'); });
-    $('#loading').on('drop', function(e) {
-        if (e.originalEvent.dataTransfer.files.length) handleFile(e.originalEvent.dataTransfer.files[0]);
-    });
-});
-
+// --- DETALLE DE GUÍA ---
 $(document).on('click', '.ver-detalle-guia', function(e) {
     e.preventDefault();
     const guia = $(this).data('guia');
+    const fila = processedData.find(row => row['Origen Documento'] === guia);
+    let info = '';
+    if (fila) {
+        info = `Almacén Origen: <b>${fila['Origen Almacen']}</b> &nbsp; | &nbsp; Almacén Destino: <b>${fila['Destino Almacen']}</b> &nbsp; | &nbsp; Fecha Origen: <b>${fila['Origen Fecha']}</b>`;
+    }
     $('#detalleGuiaModal').data('guia', guia);
     $('#detalleGuiaLabel').text('Detalle de Guía: ' + guia);
+    $('#detalleGuiaInfo').html(info);
     $('input[name="detalleFiltro"][value="todo"]').prop('checked', true);
     cargarDetalleGuia(guia, 'todo');
-    $('#detalleGuiaModal').modal('show');
-});
 
+    // Si está en pantalla completa, sube el z-index del modal y backdrop
+    if (resumenFullscreenActivo) {
+        $('#detalleGuiaModal').appendTo('body').modal('show');
+        setTimeout(function() {
+            $('.modal-backdrop').last().css('z-index', 1070);
+            $('#detalleGuiaModal').css('z-index', 1071);
+        }, 100);
+    } else {
+        $('#detalleGuiaModal').modal('show');
+    }
+});
 $(document).on('change', 'input[name="detalleFiltro"]', function() {
     const guia = $('#detalleGuiaModal').data('guia');
     const filtro = $('input[name="detalleFiltro"]:checked').val();
     cargarDetalleGuia(guia, filtro);
 });
-
 function cargarDetalleGuia(guia, filtro) {
     let filas = processedData.filter(row => row['Origen Documento'] === guia);
     if (filtro === 'pendiente') {
         filas = filas.filter(row => Number(row['Diferencia de Cantidades']) > 0);
     }
-    let html = '';
+        let html = '';
     if (filas.length === 0) {
         html = '<tr><td colspan="5" class="text-center">Sin datos</td></tr>';
     } else {
         filas.forEach(row => {
             html += `<tr>
-                <td>${row['Producto Codigo']}</td>
-                <td>${row['Producto Descripcion']}</td>
-                <td>${row['Producto Cantidad']}</td>
-                <td>${row['Destino Cantidad']}</td>
-                <td>${row['Diferencia de Cantidades']}</td>
+                <td data-label="Producto Código">${row['Producto Codigo']}</td>
+                <td data-label="Producto Descripción">${row['Producto Descripcion']}</td>
+                <td data-label="Cantidad Origen">${row['Producto Cantidad']}</td>
+                <td data-label="Cantidad Destino">${row['Destino Cantidad']}</td>
+                <td data-label="Diferencia">${row['Diferencia de Cantidades']}</td>
             </tr>`;
         });
     }
     $('#detalleGuiaTable tbody').html(html);
 }
+
+// --- ZOOM SOLO EN PANTALLA COMPLETA ---
+function setFullscreenTableFontSize(percent) {
+    // Solo afecta la tabla dentro de #resumenFullscreenTableWrapper
+    $('#resumenFullscreenTableWrapper table, #resumenFullscreenTableWrapper th, #resumenFullscreenTableWrapper td')
+        .css('font-size', (percent / 100) + 'em');
+}
+$('#zoomBar').on('input change', function() {
+    const val = $(this).val();
+    $('#zoomValue').text(val + '%');
+    setFullscreenTableFontSize(val);
+});
+// Al abrir pantalla completa, restablece zoom
+$('#btnResumenFullscreen').on('click', function() {
+    $('#zoomBar').val(100);
+    $('#zoomValue').text('100%');
+    setFullscreenTableFontSize(100);
+});
+// Al cerrar, limpia cualquier cambio
+function cerrarPantallaCompletaResumen() {
+    if (!resumenFullscreenActivo) return;
+    resumenFullscreenActivo = false;
+    $('#resumenFullscreenTableWrapper').html('');
+    $('#resumenFullscreenOverlay').fadeOut(120);
+    $('body').css('overflow', '');
+    // Limpia zoom
+    $('#zoomBar').val(100);
+    $('#zoomValue').text('100%');
+}
+
+// --- EXPORTAR DETALLE COMPLETO EN EXCEL DESDE PANTALLA COMPLETA ---
+$('#btnExportarExcelFullscreen').off('click').on('click', function() {
+    if (!resumenFullscreenActivo) return;
+
+    // Modal simple para elegir tipo de exportación
+    const modalHtml = `
+      <div id="modalExportarExcel" style="position:fixed;z-index:30000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;">
+        <div style="background:#fff;padding:32px 24px;border-radius:12px;box-shadow:0 4px 32px rgba(0,32,96,0.13);min-width:320px;text-align:center;">
+          <div style="font-size:1.1rem;margin-bottom:18px;">¿Qué desea descargar?</div>
+          <button id="btnExportarTodo" class="btn btn-success me-3"><span class="bi bi-file-earmark-spreadsheet"></span> Todo</button>
+          <button id="btnExportarPendientes" class="btn btn-warning"><span class="bi bi-exclamation-circle"></span> Solo pendientes</button>
+          <br><button id="btnCancelarExportar" class="btn btn-link mt-3">Cancelar</button>
+        </div>
+      </div>
+    `;
+    $('body').append(modalHtml);
+
+    $('#btnExportarTodo').on('click', function() {
+        exportarExcelDetalle('todo');
+        $('#modalExportarExcel').remove();
+    });
+    $('#btnExportarPendientes').on('click', function() {
+        exportarExcelDetalle('pendiente');
+        $('#modalExportarExcel').remove();
+    });
+    $('#btnCancelarExportar').on('click', function() {
+        $('#modalExportarExcel').remove();
+    });
+});
+
+function exportarExcelDetalle(tipo) {
+    // Obtén los filtros activos en la pantalla completa
+    const resumenData = buildResumenTable();
+    const filtroOrigen = $('#filtroOrigenResumen').val() || "";
+    const filtroDestino = $('#filtroDestinoResumen').val() || "";
+    const filtroEstados = $('#filtroEstadoResumen').val() || [];
+    const filtroFechaIni = $('#filtroFechaIniResumen').val();
+    const filtroFechaFin = $('#filtroFechaFinResumen').val();
+    const tiposChecked = $('#filtroTipoAlmacen input[type="checkbox"]:checked').map(function() {
+        return this.value;
+    }).get();
+
+    // Filtra los documentos igual que en renderResumenTable
+    let docsFiltrados = resumenData.filter(row => {
+        let ok = true;
+        if (filtroOrigen && row['Almacén Origen'] !== filtroOrigen) ok = false;
+        if (filtroDestino && row['Almacén Destino'] !== filtroDestino) ok = false;
+        if (filtroEstados.length && !filtroEstados.includes(row['Estado Documento'])) ok = false;
+        if (filtroFechaIni && row['Fecha Guía'] < filtroFechaIni) ok = false;
+        if (filtroFechaFin && row['Fecha Guía'] > filtroFechaFin) ok = false;
+        if (tiposChecked.length > 0) {
+            let match = false;
+            for (let tipo of tiposChecked) {
+                if (row['Almacén Destino'] && row['Almacén Destino'].toLowerCase().startsWith(tipo.toLowerCase())) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) ok = false;
+        }
+        return ok;
+    }).map(row => row['Guía Remisión']);
+
+    // Filtra los detalles de las guías seleccionadas
+    let filas = processedData.filter(row => docsFiltrados.includes(row['Origen Documento']));
+    if (tipo === 'pendiente') {
+        filas = filas.filter(row => Number(row['Diferencia de Cantidades']) > 0);
+    }
+
+    if (!filas.length) {
+        alert('No hay datos para exportar.');
+        return;
+    }
+
+    // Prepara los datos para Excel
+    const headers = [
+        "Origen Sucursal", "Origen Almacen", "Origen Documento", "Origen Fecha",
+        "Producto Codigo", "Producto Descripcion", "Producto Cantidad",
+        "Destino Sucursal", "Destino Almacen", "Destino Fecha", "Destino Cantidad",
+        "Diferencia de Cantidades", "Estado Documento"
+    ];
+    const data = [headers];
+    filas.forEach(row => {
+        data.push([
+            row["Origen Sucursal"], row["Origen Almacen"], row["Origen Documento"], row["Origen Fecha"],
+            row["Producto Codigo"], row["Producto Descripcion"], row["Producto Cantidad"],
+            row["Destino Sucursal"], row["Destino Almacen"], row["Destino Fecha"], row["Destino Cantidad"],
+            row["Diferencia de Cantidades"], row["Estado Documento"]
+        ]);
+    });
+
+    // Genera y descarga el archivo Excel
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Detalle");
+    XLSX.writeFile(wb, "Detalle_Guias.xlsx");
+}
+
+// Modal de detalle de guía: siempre encima
+$(document).on('click', '.ver-detalle-guia', function(e) {
+    e.preventDefault();
+    const guia = $(this).data('guia');
+    const fila = processedData.find(row => row['Origen Documento'] === guia);
+    let info = '';
+    if (fila) {
+        info = `Almacén Origen: <b>${fila['Origen Almacen']}</b> &nbsp; | &nbsp; Almacén Destino: <b>${fila['Destino Almacen']}</b> &nbsp; | &nbsp; Fecha Origen: <b>${fila['Origen Fecha']}</b>`;
+    }
+    $('#detalleGuiaModal').data('guia', guia);
+    $('#detalleGuiaLabel').text('Detalle de Guía: ' + guia);
+    $('#detalleGuiaInfo').html(info);
+    $('input[name="detalleFiltro"][value="todo"]').prop('checked', true);
+    cargarDetalleGuia(guia, 'todo');
+    $('#detalleGuiaModal').appendTo('body').modal('show');
+});
     </script>
     <footer class="autor-footer">
         &copy; 2025 Miguel Fajardo. Todos los derechos reservados.
