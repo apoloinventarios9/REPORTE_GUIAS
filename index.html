@@ -3377,81 +3377,274 @@ function handleFileInput(file) {
     
     console.log('📁 Procesando archivo:', file.name, 'Tamaño:', (file.size / 1024 / 1024).toFixed(2), 'MB');
     
-    // Verificar compatibilidad del navegador primero
+    // Verificar APIs críticas para GitHub Pages
     if (typeof FileReader === 'undefined') {
-        showError('Tu navegador no soporta la lectura de archivos. Usa un navegador más moderno.');
+        showError('Tu navegador no soporta la lectura de archivos. Usa Chrome, Firefox, Safari o Edge actualizado.');
         return;
     }
     
     if (typeof XLSX === 'undefined') {
-        showError('Error: La librería XLSX no se cargó correctamente. Verifica tu conexión a internet y recarga la página.');
+        showError('Error: La librería XLSX no se cargó. Verifica tu conexión a internet y recarga la página.');
         return;
     }
     
-    // *** FEEDBACK INMEDIATO *** - Mostrar loading antes de cualquier validación
-    showSectionLoading('mainContent', `Preparando archivo "${file.name}"...`, `Tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+    // Para GitHub Pages: usar procesamiento directo sin Web Workers
+    console.log('🌐 GitHub Pages detectado - usando procesamiento directo');
+    processFileDirectly(file);
+}
+
+// Función de procesamiento directo para GitHub Pages
+async function processFileDirectly(file) {
+    // Mostrar loading inmediato
+    showSectionLoading('mainContent', `Procesando "${file.name}"...`, `Tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
     
-    // Validaciones con feedback
-    setTimeout(() => {
-        try {
-            if (!file.name.match(/\.(xlsx|xls)$/i)) {
-                hideSectionLoading('mainContent');
-                showError('Archivo no válido. Selecciona un archivo Excel (.xlsx o .xls). GitHub Pages solo soporta estos formatos.');
-                return;
-            }
-            
-            // Validar tamaño de archivo (máximo 50MB para GitHub Pages)
-            const maxSize = 50 * 1024 * 1024;
-            if (file.size > maxSize) {
-                hideSectionLoading('mainContent');
-                showError(`El archivo es demasiado grande (${(file.size / 1024 / 1024).toFixed(2)} MB). El tamaño máximo permitido es 50MB para optimal performance en GitHub Pages.`);
-                return;
-            }
-            
-            // Verificar que el archivo no esté vacío
-            if (file.size === 0) {
-                hideSectionLoading('mainContent');
-                showError('El archivo está vacío. Selecciona un archivo Excel con datos.');
-                return;
-            }
+    try {
+        // Validaciones básicas
+        if (!file.name.match(/\.(xlsx|xls)$/i)) {
+            throw new Error('Formato de archivo no válido. Selecciona un archivo Excel (.xlsx o .xls)');
+        }
         
-            showError('');
+        const maxSize = 50 * 1024 * 1024;
+        if (file.size > maxSize) {
+            throw new Error(`Archivo demasiado grande (${(file.size / 1024 / 1024).toFixed(2)} MB). Máximo permitido: 50MB`);
+        }
+        
+        if (file.size === 0) {
+            throw new Error('El archivo está vacío');
+        }
+        
+        console.log('✅ Validaciones pasadas, leyendo archivo...');
+        
+        // Leer archivo usando FileReader
+        const arrayBuffer = await readFileAsArrayBuffer(file);
+        
+        // Actualizar progreso
+        updateLoadingMessage('Procesando datos del Excel...');
+        
+        // Procesar con XLSX
+        console.log('📊 Procesando Excel con XLSX library...');
+        const workbook = XLSX.read(arrayBuffer, { 
+            type: 'array',
+            cellDates: true,
+            cellNF: false,
+            cellStyles: false
+        });
+        
+        if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+            throw new Error('El archivo Excel no contiene hojas válidas');
+        }
+        
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        if (!worksheet) {
+            throw new Error(`No se pudo leer la hoja "${sheetName}"`);
+        }
+        
+        // Verificar que la hoja tenga datos
+        const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+        if (range.e.r < 1) {
+            throw new Error('La hoja de Excel parece estar vacía o tiene muy pocos datos');
+        }
+        
+        updateLoadingMessage('Convirtiendo datos...');
+        
+        // Convertir a JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (!jsonData || jsonData.length === 0) {
+            throw new Error('No se pudieron extraer datos válidos del archivo Excel');
+        }
+        
+        console.log(`✅ Datos extraídos: ${jsonData.length} filas`);
+        
+        // Procesar datos
+        updateLoadingMessage('Procesando y validando filas...');
+        const processedData = processExcelData(jsonData);
+        
+        console.log(`✅ Datos procesados: ${processedData.length} filas válidas`);
+        
+        // Finalizar y mostrar datos
+        updateLoadingMessage('Preparando visualización...');
+        
+        setTimeout(() => {
+            displayProcessedData(processedData, file.name);
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ Error procesando archivo:', error);
+        hideSectionLoading('mainContent');
+        showError(`Error procesando el archivo Excel: ${error.message}`);
+    }
+}
+
+// Función helper para leer archivo como ArrayBuffer
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            console.log('📖 Archivo leído exitosamente');
+            resolve(e.target.result);
+        };
+        
+        reader.onerror = function() {
+            reject(new Error('Error leyendo el archivo. Intenta con otro archivo.'));
+        };
+        
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// Función para actualizar mensaje de loading
+function updateLoadingMessage(message) {
+    const overlay = $('#loading-mainContent .loading-text');
+    if (overlay.length > 0) {
+        overlay.text(message);
+    }
+}
+
+// Función para procesar datos Excel
+function processExcelData(jsonData) {
+    console.log('⚙️ Procesando filas de datos...');
+    
+    return jsonData.map((row, index) => {
+        try {
+            const processed = { ...row };
             
-            // Actualizar mensaje del overlay existente
-            const overlay = $('#loading-mainContent .loading-text');
-            if (overlay.length > 0) {
-                overlay.text('Inicializando procesador...');
+            // Validar y procesar cantidades
+            const cantidadOrigen = Number(processed['Producto Cantidad']) || 0;
+            const cantidadDestino = Number(processed['Destino Cantidad']) || 0;
+            
+            // Asegurar que tenga documento origen
+            if (!processed['Origen Documento']) {
+                processed['Origen Documento'] = `DOC-${index + 1}`;
             }
             
-            // Inicializar Web Worker con feedback
-            setTimeout(() => {
-                if (!excelProcessor.worker) {
-                    const overlay = $('#loading-mainContent .loading-text');
-                    if (overlay.length > 0) {
-                        overlay.text('Configurando Web Worker...');
-                    }
-                    
-                    const workerInitialized = excelProcessor.initWorker();
-                    if (!workerInitialized) {
-                        showNotification('Usando procesamiento alternativo para GitHub Pages (puede ser más lento)', 'warning');
-                    }
+            // Calcular estado del documento
+            if (cantidadDestino === 0) {
+                processed['Estado Documento'] = 'Pendiente-Total';
+            } else if (cantidadDestino < cantidadOrigen) {
+                processed['Estado Documento'] = 'Aceptado-Parcial';
+            } else {
+                processed['Estado Documento'] = 'Aceptado-Total';
+            }
+            
+            return processed;
+        } catch (rowError) {
+            console.warn(`⚠️ Error en fila ${index + 1}:`, rowError);
+            return { ...row, 'Estado Documento': 'Pendiente-Total' };
+        }
+    });
+}
+
+// Función para mostrar los datos procesados
+function displayProcessedData(data, fileName) {
+    try {
+        // Asignar a variables globales
+        rawData = data;
+        processedData = data;
+        
+        console.log('📊 Datos asignados a variables globales');
+        
+        // Ocultar loading de archivo
+        hideSectionLoading('mainContent');
+        
+        // Mostrar contenido principal
+        $('#loading').hide();
+        $('#mainContent').show();
+        
+        // Mostrar loading para componentes individuales
+        showSectionLoading('dashboardTab', 'Generando gráficos...');
+        showSectionLoading('tablaGeneralTab', 'Preparando tabla...');
+        showSectionLoading('resumenTab', 'Creando resumen...');
+        
+        // Inicializar componentes progresivamente
+        setTimeout(() => {
+            try {
+                console.log('📋 Inicializando tablas...');
+                if (typeof initializeTables === 'function') {
+                    initializeTables();
+                    console.log('✅ Tablas inicializadas');
+                } else {
+                    console.error('❌ initializeTables no está definida');
                 }
                 
-                // Procesar archivo con manejo de errores específico para GitHub Pages
-                excelProcessor.processFile(file).catch(error => {
-                    hideSectionLoading('mainContent');
-                    showError(`Error procesando archivo en GitHub Pages: ${error.message}. Verifica que el archivo Excel tenga el formato correcto y no esté dañado.`);
-                    console.error('Error procesando archivo:', error);
-                });
+                hideSectionLoading('tablaGeneralTab');
                 
-            }, 100);
-            
-        } catch (validationError) {
-            hideSectionLoading('mainContent');
-            showError(`Error de validación: ${validationError.message}`);
-            console.error('Error en validación de archivo:', validationError);
-        }
-    }, 50);
+                console.log('📊 Renderizando tabla de estados...');
+                if (typeof renderEstadoTableImmediate === 'function') {
+                    renderEstadoTableImmediate();
+                    console.log('✅ Tabla de estados renderizada');
+                } else {
+                    console.error('❌ renderEstadoTableImmediate no está definida');
+                }
+                
+                showNotification(`Tabla cargada (${data.length} registros)`, 'success', 2000);
+                
+                setTimeout(() => {
+                    try {
+                        console.log('📈 Actualizando gráficos...');
+                        if (typeof updateCharts === 'function') {
+                            updateCharts();
+                            console.log('✅ Gráficos actualizados');
+                        } else {
+                            console.error('❌ updateCharts no está definida');
+                        }
+                        
+                        console.log('📊 Actualizando KPIs...');
+                        if (typeof updateKPIs === 'function') {
+                            updateKPIs();
+                            console.log('✅ KPIs actualizados');
+                        } else {
+                            console.error('❌ updateKPIs no está definida');
+                        }
+                        
+                        hideSectionLoading('dashboardTab');
+                        
+                        setTimeout(() => {
+                            try {
+                                console.log('📋 Renderizando tabla de resumen...');
+                                if (typeof renderResumenTable === 'function') {
+                                    renderResumenTable();
+                                    console.log('✅ Tabla de resumen renderizada');
+                                } else {
+                                    console.error('❌ renderResumenTable no está definida');
+                                }
+                                
+                                hideSectionLoading('resumenTab');
+                                
+                                showSuccessMessage(`Archivo "${fileName}" procesado exitosamente. ${data.length} registros cargados.`);
+                                console.log('🎉 Inicialización completa exitosa');
+                                
+                            } catch (resumenError) {
+                                console.error('❌ Error en renderizado de resumen:', resumenError);
+                                hideSectionLoading('resumenTab');
+                                showNotification(`Advertencia: Error cargando resumen: ${resumenError.message}`, 'warning', 3000);
+                            }
+                        }, 200);
+                        
+                    } catch (chartsError) {
+                        console.error('❌ Error actualizando gráficos:', chartsError);
+                        hideSectionLoading('dashboardTab');
+                        showNotification(`Advertencia: Error cargando gráficos: ${chartsError.message}`, 'warning', 3000);
+                    }
+                }, 300);
+                
+            } catch (error) {
+                console.error('❌ Error inicializando componentes:', error);
+                hideSectionLoading('dashboardTab');
+                hideSectionLoading('tablaGeneralTab'); 
+                hideSectionLoading('resumenTab');
+                showError(`Error mostrando los datos: ${error.message}`);
+            }
+        }, 100);
+        
+    } catch (error) {
+        console.error('❌ Error en displayProcessedData:', error);
+        hideSectionLoading('mainContent');
+        showError(`Error preparando los datos para mostrar: ${error.message}`);
+    }
 }
 
 // --- EVENTOS DE IMPORTACIÓN ---
@@ -4274,7 +4467,7 @@ function initializeTables() {
                 boundaryScale: processedData.length > 15000 ? 0.3 : 0.5,
                 loadingIndicator: true
             },
-            paging: false,
+            paging: true, // REQUERIDO para Scroller - no se puede desactivar
             info: true,
             searching: true,
             // Optimizaciones adicionales para datasets muy grandes
