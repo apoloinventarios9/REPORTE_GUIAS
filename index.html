@@ -1907,6 +1907,113 @@
             padding: 6px 10px;
             border-radius: 8px;
         }
+
+        /* ========== ESTILOS PARA FEEDBACK INMEDIATO DE ARCHIVO ========== */
+        
+        /* Cursor de procesamiento */
+        .processing-cursor * {
+            cursor: wait !important;
+        }
+        
+        /* Container del input de archivo */
+        .file-input-container {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            padding: 8px;
+        }
+        
+        .file-input-container.file-selected {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border: 2px solid #2196f3;
+            box-shadow: 0 4px 20px rgba(33, 150, 243, 0.15);
+        }
+        
+        .file-input-container.processing label {
+            color: #1976d2 !important;
+            font-weight: 600;
+            animation: pulse-text 2s infinite;
+        }
+        
+        /* Animación para texto de procesamiento */
+        @keyframes pulse-text {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Toast de notificación inmediata mejorado */
+        #file-processing-toast .toast {
+            min-width: 350px;
+            animation: slideInFromRight 0.4s ease-out;
+        }
+        
+        @keyframes slideInFromRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Spinner mejorado para el toast */
+        #file-processing-toast .spinner-border {
+            animation: spin 1s linear infinite, pulse-glow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 0 0 rgba(255, 255, 255, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+            }
+        }
+        
+        /* Estados de input deshabilitado */
+        #excelFile:disabled {
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        
+        /* Estilos para botón de browse en procesamiento */
+        #browseBtn.file-selected.processing {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%) !important;
+            border: 2px solid #2196f3 !important;
+            color: #1976d2 !important;
+            box-shadow: 0 4px 20px rgba(33, 150, 243, 0.25) !important;
+            transform: scale(1.02);
+            transition: all 0.3s ease;
+        }
+        
+        #browseBtn.processing:disabled {
+            opacity: 0.9;
+            cursor: wait;
+        }
+        
+        /* Mejoras visuales para el estado de procesamiento */
+        .file-selected .fas.fa-spinner,
+        .processing .fas.fa-spinner {
+            color: #2196f3 !important;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive para el toast */
+        @media (max-width: 576px) {
+            #file-processing-toast .toast {
+                min-width: 280px;
+            }
+            
+            #file-processing-toast {
+                padding: 1rem !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -3191,6 +3298,89 @@ function showSuccessMessage(message) {
     showNotification(message, 'success');
 }
 
+// Función para mostrar feedback inmediato cuando se selecciona archivo
+function showInstantFileNotification(file) {
+    // Crear elementos visuales inmediatos
+    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+    const fileName = file.name.length > 30 ? file.name.substring(0, 30) + '...' : file.name;
+    
+    // 1. Cambiar el botón de selección para mostrar que se procesó
+    const fileInput = $('#excelFile');
+    const browseBtn = $('#browseBtn');
+    
+    if (browseBtn.length > 0) {
+        browseBtn.addClass('file-selected processing');
+        browseBtn.html(`
+            <i class="fas fa-spinner fa-spin text-primary me-2"></i>
+            Procesando "${fileName}" (${fileSize} MB)...
+        `);
+        browseBtn.prop('disabled', true);
+    }
+    
+    // 2. Mostrar notificación inmediata tipo toast
+    const toastId = 'file-processing-toast';
+    
+    // Remover toast anterior si existe
+    $(`#${toastId}`).remove();
+    
+    const toast = `
+        <div id="${toastId}" class="position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast show border-0 shadow-lg bg-primary text-white" role="alert">
+                <div class="toast-header bg-primary text-white border-0">
+                    <i class="fas fa-file-excel text-success me-2"></i>
+                    <strong class="me-auto">Archivo Seleccionado</strong>
+                    <small>Ahora</small>
+                </div>
+                <div class="toast-body">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border spinner-border-sm text-light me-3" role="status">
+                            <span class="visually-hidden">Procesando...</span>
+                        </div>
+                        <div>
+                            <div class="fw-bold">${fileName}</div>
+                            <small class="text-light">Tamaño: ${fileSize} MB • Iniciando procesamiento...</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('body').append(toast);
+    
+    // 3. Cambiar cursor para mostrar actividad
+    $('body').addClass('processing-cursor');
+    
+    // 4. Deshabilitar temporalmente el input
+    fileInput.prop('disabled', true);
+    
+    // Auto-remover elementos después de 3 segundos (cuando aparezcan los loading principales)
+    setTimeout(() => {
+        const browseBtn = $('#browseBtn'); // Re-seleccionar para el setTimeout
+        $(`#${toastId}`).fadeOut(500, function() {
+            $(this).remove();
+        });
+        
+        // Restaurar cursor
+        $('body').removeClass('processing-cursor');
+        
+        // Re-habilitar input
+        fileInput.prop('disabled', false);
+        
+        // Restaurar botón de selección
+        if (browseBtn.length > 0) {
+            browseBtn.removeClass('processing file-selected');
+            browseBtn.html(`
+                <i class="bi bi-folder2-open me-2"></i>
+                Seleccionar archivo
+            `);
+            browseBtn.prop('disabled', false);
+        }
+    }, 3000);
+    
+    console.log('⚡ Feedback inmediato mostrado para:', file.name);
+}
+
 // Loading states para secciones específicas
 // Variables para manejo de loading avanzado
 let loadingTimeouts = new Map();
@@ -3374,6 +3564,9 @@ function handleFileInput(file) {
         showError('No se seleccionó ningún archivo');
         return;
     }
+    
+    // *** FEEDBACK VISUAL INMEDIATO *** - Mostrar que el archivo fue seleccionado
+    showInstantFileNotification(file);
     
     console.log('📁 Procesando archivo:', file.name, 'Tamaño:', (file.size / 1024 / 1024).toFixed(2), 'MB');
     
