@@ -2046,7 +2046,7 @@
                     </div>
                     <div class="feature-text">
                         <h4>Datos Seguros</h4>
-                        <p>Procesamiento local, sin subir a servidor</p>
+                        <p>Procesamiento local en tu navegador</p>
                     </div>
                 </div>
                 
@@ -2085,6 +2085,10 @@
                 <div class="tip-item">
                     <i class="bi bi-shield-lock text-success"></i>
                     <span><strong>Privacidad:</strong> Tus datos no se envían a ningún servidor externo</span>
+                </div>
+                <div class="tip-item">
+                    <i class="bi bi-cloud text-primary"></i>
+                    <span><strong>GitHub Pages:</strong> Aplicación optimizada para funcionamiento online</span>
                 </div>
             </div>
 
@@ -2509,6 +2513,103 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+// --- INICIALIZACIÓN GITHUB PAGES ---
+function initializeGitHubPagesCompatibility() {
+    console.log('🚀 Inicializando compatibilidad con GitHub Pages...');
+    
+    // Verificar que todas las librerías CDN se hayan cargado
+    const requiredLibraries = [
+        { name: 'jQuery', check: () => typeof $ !== 'undefined' },
+        { name: 'DataTables', check: () => typeof $.fn.DataTable !== 'undefined' },
+        { name: 'Chart.js', check: () => typeof Chart !== 'undefined' },
+        { name: 'Bootstrap', check: () => typeof bootstrap !== 'undefined' },
+        { name: 'XLSX', check: () => typeof XLSX !== 'undefined' }
+    ];
+    
+    const missingLibraries = requiredLibraries.filter(lib => !lib.check());
+    
+    if (missingLibraries.length > 0) {
+        console.error('❌ Librerías faltantes:', missingLibraries.map(lib => lib.name));
+        showError(`Error de carga: Faltan librerías necesarias (${missingLibraries.map(lib => lib.name).join(', ')}). Verifica tu conexión a internet.`);
+        return false;
+    }
+    
+    console.log('✅ Todas las librerías CDN cargadas correctamente');
+    
+    // Verificar compatibilidad del navegador
+    const browserFeatures = [
+        { name: 'FileReader API', check: () => typeof FileReader !== 'undefined' },
+        { name: 'Blob API', check: () => typeof Blob !== 'undefined' },
+        { name: 'URL API', check: () => typeof URL !== 'undefined' },
+        { name: 'Canvas API', check: () => typeof HTMLCanvasElement !== 'undefined' }
+    ];
+    
+    const unsupportedFeatures = browserFeatures.filter(feature => !feature.check());
+    
+    if (unsupportedFeatures.length > 0) {
+        console.warn('⚠️ Funciones no soportadas:', unsupportedFeatures.map(f => f.name));
+        showNotification(`Algunas funciones pueden no estar disponibles en este navegador: ${unsupportedFeatures.map(f => f.name).join(', ')}`, 'warning', 8000);
+    }
+    
+    console.log('✅ Dashboard compatible con GitHub Pages inicializado correctamente');
+    return true;
+}
+
+// Función de diagnóstico para GitHub Pages
+function runGitHubPagesDiagnostics() {
+    console.group('🔍 Diagnóstico GitHub Pages');
+    
+    // Información del entorno
+    console.log('🌐 URL actual:', window.location.href);
+    console.log('📡 Protocolo:', window.location.protocol);
+    console.log('🖥️ User Agent:', navigator.userAgent);
+    console.log('📱 Es móvil:', /Mobi|Android/i.test(navigator.userAgent));
+    
+    // Verificar APIs críticas
+    const apis = {
+        'FileReader': typeof FileReader !== 'undefined',
+        'Blob': typeof Blob !== 'undefined',
+        'URL': typeof URL !== 'undefined',
+        'Worker': typeof Worker !== 'undefined',
+        'Canvas': typeof HTMLCanvasElement !== 'undefined',
+        'localStorage': typeof Storage !== 'undefined'
+    };
+    
+    console.table(apis);
+    
+    // Verificar librerías CDN
+    const libraries = {
+        'jQuery': typeof $ !== 'undefined',
+        'DataTables': typeof $.fn.DataTable !== 'undefined',
+        'Chart.js': typeof Chart !== 'undefined',
+        'Bootstrap': typeof bootstrap !== 'undefined',
+        'XLSX': typeof XLSX !== 'undefined'
+    };
+    
+    console.table(libraries);
+    
+    // Mostrar warnings si hay problemas
+    const missingAPIs = Object.keys(apis).filter(api => !apis[api]);
+    const missingLibs = Object.keys(libraries).filter(lib => !libraries[lib]);
+    
+    if (missingAPIs.length > 0) {
+        console.warn('⚠️ APIs faltantes:', missingAPIs);
+    }
+    
+    if (missingLibs.length > 0) {
+        console.error('❌ Librerías faltantes:', missingLibs);
+    }
+    
+    console.groupEnd();
+    
+    // Mostrar resultado en UI si hay problemas críticos
+    if (missingLibs.length > 0) {
+        setTimeout(() => {
+            showError(`Problemas detectados en GitHub Pages: Librerías faltantes (${missingLibs.join(', ')}). Verifica tu conexión a internet y recarga la página.`);
+        }, 1000);
+    }
+}
+
 // --- VARIABLES GLOBALES ---
 let rawData = [];
 let processedData = [];
@@ -2556,35 +2657,89 @@ class ExcelProcessorManager {
         }
         
         try {
-            this.worker = new Worker('excel-worker.js');
+            // Crear Web Worker inline para GitHub Pages compatibilidad
+            const workerScript = `
+                // Web Worker para procesamiento Excel inline
+                importScripts('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js');
+                
+                self.onmessage = function(e) {
+                    const { type, data, fileName } = e.data;
+                    
+                    if (type === 'process') {
+                        try {
+                            const workbook = XLSX.read(data, { type: 'array' });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                            
+                            // Procesar datos
+                            const headers = jsonData[0] || [];
+                            const rows = jsonData.slice(1);
+                            const processedRows = rows.map(row => {
+                                const obj = {};
+                                headers.forEach((header, index) => {
+                                    obj[header] = row[index] || '';
+                                });
+                                return obj;
+                            });
+                            
+                            self.postMessage({
+                                type: 'success',
+                                data: processedRows,
+                                fileName: fileName
+                            });
+                        } catch (error) {
+                            self.postMessage({
+                                type: 'error',
+                                message: error.message,
+                                fileName: fileName
+                            });
+                        }
+                    }
+                    
+                    if (type === 'cancel') {
+                        self.postMessage({ type: 'cancelled' });
+                    }
+                };
+            `;
+            
+            const blob = new Blob([workerScript], { type: 'application/javascript' });
+            const workerUrl = URL.createObjectURL(blob);
+            this.worker = new Worker(workerUrl);
             this.setupWorkerHandlers();
             this.workerSupported = true;
-            console.info('✅ Web Worker inicializado correctamente');
+            console.info('✅ Web Worker inline inicializado correctamente para GitHub Pages');
             return true;
         } catch (error) {
-            console.info('🔧 Fallback a procesamiento principal:', error.message);
+            console.info('🔧 Fallback a procesamiento principal (GitHub Pages compatible):', error.message);
             this.workerSupported = false;
             return false;
         }
     }
     
     canUseWorkers() {
-        // Verificar si estamos en un protocolo que soporta Workers
+        // Compatibilidad mejorada para GitHub Pages y diferentes entornos
         const protocol = window.location.protocol;
-        const isFileProtocol = protocol === 'file:';
-        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const hostname = window.location.hostname;
         
-        // Los Web Workers no funcionan bien con file:// protocol
-        if (isFileProtocol) {
+        // Verificar APIs necesarias
+        if (typeof Worker === 'undefined' || 
+            typeof Blob === 'undefined' || 
+            typeof URL === 'undefined' || 
+            typeof URL.createObjectURL !== 'function') {
             return false;
         }
         
-        // Verificar si Worker está disponible
-        if (typeof Worker === 'undefined') {
+        // Los Web Workers no funcionan con file:// protocol
+        if (protocol === 'file:') {
             return false;
         }
         
-        return true;
+        // Permitir HTTPS (GitHub Pages), HTTP localhost para desarrollo
+        const isSecure = protocol === 'https:';
+        const isLocalDev = (protocol === 'http:' && (hostname === 'localhost' || hostname === '127.0.0.1'));
+        
+        return isSecure || isLocalDev;
     }
     
     setupWorkerHandlers() {
@@ -2696,28 +2851,72 @@ class ExcelProcessorManager {
             });
             this.updateProgress(50, 'Convirtiendo datos...');
             
+            // Validación robusta para GitHub Pages
+            if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                throw new Error('El archivo Excel no contiene hojas válidas');
+            }
+            
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
+            
+            if (!worksheet) {
+                throw new Error(`No se pudo acceder a la hoja "${sheetName}"`);
+            }
+            
+            // Verificar que la hoja tenga datos
+            const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
+            if (range.e.r < 1) { // Menos de 2 filas (header + data)
+                throw new Error('El archivo Excel parece estar vacío o no tiene datos suficientes');
+            }
+            
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            
+            if (!jsonData || jsonData.length === 0) {
+                throw new Error('No se pudieron extraer datos del archivo Excel');
+            }
+            
+            // Validar columnas críticas para GitHub Pages
+            const firstRow = jsonData[0];
+            const criticalColumns = ['Producto Cantidad', 'Destino Cantidad', 'Origen Documento'];
+            const missingColumns = criticalColumns.filter(col => !(col in firstRow));
+            
+            if (missingColumns.length > 0) {
+                throw new Error(`Columnas requeridas faltantes: ${missingColumns.join(', ')}. Verifica que el archivo tenga el formato correcto.`);
+            }
             
             this.updateProgress(75, 'Finalizando procesamiento...');
             
-            // Procesar datos
-            const processedRows = jsonData.map(row => {
-                // Lógica básica de procesamiento
-                const processed = { ...row };
-                const cantidadOrigen = Number(processed['Producto Cantidad']) || 0;
-                const cantidadDestino = Number(processed['Destino Cantidad']) || 0;
-                
-                if (cantidadDestino === 0) {
-                    processed['Estado Documento'] = 'Pendiente-Total';
-                } else if (cantidadDestino < cantidadOrigen) {
-                    processed['Estado Documento'] = 'Aceptado-Parcial';
-                } else {
-                    processed['Estado Documento'] = 'Aceptado-Total';
+            // Procesar datos con validaciones adicionales
+            const processedRows = jsonData.map((row, index) => {
+                try {
+                    // Lógica básica de procesamiento con validaciones
+                    const processed = { ...row };
+                    
+                    // Validar que las cantidades sean números
+                    const cantidadOrigen = Number(processed['Producto Cantidad']) || 0;
+                    const cantidadDestino = Number(processed['Destino Cantidad']) || 0;
+                    
+                    // Validar documento origen
+                    if (!processed['Origen Documento']) {
+                        console.warn(`Fila ${index + 1}: Falta Origen Documento, se asignará valor por defecto`);
+                        processed['Origen Documento'] = `DOC-${index + 1}`;
+                    }
+                    
+                    // Calcular estado del documento
+                    if (cantidadDestino === 0) {
+                        processed['Estado Documento'] = 'Pendiente-Total';
+                    } else if (cantidadDestino < cantidadOrigen) {
+                        processed['Estado Documento'] = 'Aceptado-Parcial';
+                    } else {
+                        processed['Estado Documento'] = 'Aceptado-Total';
+                    }
+                    
+                    return processed;
+                } catch (rowError) {
+                    console.warn(`Error procesando fila ${index + 1}:`, rowError);
+                    // Retornar fila original con estado por defecto
+                    return { ...row, 'Estado Documento': 'Pendiente-Total' };
                 }
-                
-                return processed;
             });
             
             this.updateProgress(100, 'Completado');
@@ -3171,60 +3370,102 @@ function validarColumnas(datos) {
 }
 
 function handleFileInput(file) {
-    if (!file) return;
+    if (!file) {
+        showError('No se seleccionó ningún archivo');
+        return;
+    }
+    
+    console.log('📁 Procesando archivo:', file.name, 'Tamaño:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+    
+    // Verificar compatibilidad del navegador primero
+    if (typeof FileReader === 'undefined') {
+        showError('Tu navegador no soporta la lectura de archivos. Usa un navegador más moderno.');
+        return;
+    }
+    
+    if (typeof XLSX === 'undefined') {
+        showError('Error: La librería XLSX no se cargó correctamente. Verifica tu conexión a internet y recarga la página.');
+        return;
+    }
     
     // *** FEEDBACK INMEDIATO *** - Mostrar loading antes de cualquier validación
     showSectionLoading('mainContent', `Preparando archivo "${file.name}"...`, `Tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
     
     // Validaciones con feedback
     setTimeout(() => {
-        if (!file.name.match(/\.(xlsx|xls)$/i)) {
-            hideSectionLoading('mainContent');
-            showError('Archivo no válido. Selecciona un archivo Excel (.xlsx o .xls)');
-            return;
-        }
-        
-        // Validar tamaño de archivo (máximo 50MB)
-        const maxSize = 50 * 1024 * 1024;
-        if (file.size > maxSize) {
-            hideSectionLoading('mainContent');
-            showError('El archivo es demasiado grande. El tamaño máximo permitido es 50MB.');
-            return;
-        }
-        
-        showError('');
-        // Actualizar mensaje del overlay existente si es necesario
-        const overlay = $('#loading-mainContent .loading-text');
-        if (overlay.length > 0) {
-            overlay.text('Inicializando procesador...');
-        }
-        
-        // Inicializar Web Worker con feedback
-        setTimeout(() => {
-            if (!excelProcessor.worker) {
-                // Actualizar mensaje del overlay existente
-                const overlay = $('#loading-mainContent .loading-text');
-                if (overlay.length > 0) {
-                    overlay.text('Configurando Web Worker...');
-                }
-                
-                const workerInitialized = excelProcessor.initWorker();
-                if (!workerInitialized) {
-                    showNotification('Usando procesamiento alternativo (puede ser más lento)', 'warning');
-                }
+        try {
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                hideSectionLoading('mainContent');
+                showError('Archivo no válido. Selecciona un archivo Excel (.xlsx o .xls). GitHub Pages solo soporta estos formatos.');
+                return;
             }
             
-            // Procesar archivo con Web Worker mejorado
-            excelProcessor.processFile(file).catch(error => {
+            // Validar tamaño de archivo (máximo 50MB para GitHub Pages)
+            const maxSize = 50 * 1024 * 1024;
+            if (file.size > maxSize) {
                 hideSectionLoading('mainContent');
-                showError(`Error procesando archivo: ${error.message}`);
-            });
-        }, 100);
+                showError(`El archivo es demasiado grande (${(file.size / 1024 / 1024).toFixed(2)} MB). El tamaño máximo permitido es 50MB para optimal performance en GitHub Pages.`);
+                return;
+            }
+            
+            // Verificar que el archivo no esté vacío
+            if (file.size === 0) {
+                hideSectionLoading('mainContent');
+                showError('El archivo está vacío. Selecciona un archivo Excel con datos.');
+                return;
+            }
+        
+            showError('');
+            
+            // Actualizar mensaje del overlay existente
+            const overlay = $('#loading-mainContent .loading-text');
+            if (overlay.length > 0) {
+                overlay.text('Inicializando procesador...');
+            }
+            
+            // Inicializar Web Worker con feedback
+            setTimeout(() => {
+                if (!excelProcessor.worker) {
+                    const overlay = $('#loading-mainContent .loading-text');
+                    if (overlay.length > 0) {
+                        overlay.text('Configurando Web Worker...');
+                    }
+                    
+                    const workerInitialized = excelProcessor.initWorker();
+                    if (!workerInitialized) {
+                        showNotification('Usando procesamiento alternativo para GitHub Pages (puede ser más lento)', 'warning');
+                    }
+                }
+                
+                // Procesar archivo con manejo de errores específico para GitHub Pages
+                excelProcessor.processFile(file).catch(error => {
+                    hideSectionLoading('mainContent');
+                    showError(`Error procesando archivo en GitHub Pages: ${error.message}. Verifica que el archivo Excel tenga el formato correcto y no esté dañado.`);
+                    console.error('Error procesando archivo:', error);
+                });
+                
+            }, 100);
+            
+        } catch (validationError) {
+            hideSectionLoading('mainContent');
+            showError(`Error de validación: ${validationError.message}`);
+            console.error('Error en validación de archivo:', validationError);
+        }
     }, 50);
 }
 
 // --- EVENTOS DE IMPORTACIÓN ---
 $(function () {
+    // Verificar compatibilidad con GitHub Pages primero
+    if (!initializeGitHubPagesCompatibility()) {
+        return; // Detener inicialización si hay problemas críticos
+    }
+    
+    // Ejecutar diagnóstico en desarrollo o si hay problemas
+    if (DEBUG_MODE || window.location.search.includes('debug')) {
+        runGitHubPagesDiagnostics();
+    }
+    
     // Inicialización completa al cargar la página
     excelProcessor.initWorker();
     
@@ -6153,6 +6394,13 @@ $(document).ready(function() {
     </script>
     <footer class="autor-footer">
         &copy; 2025 Miguel Fajardo. Todos los derechos reservados.
+        <span style="margin-left: 20px; font-size: 0.8em;">
+            <a href="#" onclick="runGitHubPagesDiagnostics(); return false;" 
+               style="color: #888; text-decoration: none;" 
+               title="Ejecutar diagnóstico de compatibilidad">
+                🔧 Diagnóstico
+            </a>
+        </span>
     </footer>
 </body>
 </html>
